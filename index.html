@@ -3,108 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WJSBUTLER 2026 | Timeline Edition</title>
+    <title>WJSBUTLER 2026 | L'Odyssée des Roses</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Manrope:wght@300;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --cyan: #00FFFF;
-            --magenta: #FF00FF;
-            --lime: #CCFF00;
-            --void: #050505;
+            --gold: #D4AF37;
+            --rose: #e91e63; /* Rose profond pour la fleur */
+            --blue: #aaccff;
+            --dark: #020202;
+            --card-bg: rgba(5, 5, 8, 0.95); /* Fond quasi opaque */
         }
 
         body { 
-            margin: 0; overflow: hidden; background-color: var(--void); 
-            font-family: 'Montserrat', sans-serif; cursor: none;
+            margin: 0; overflow: hidden; background-color: var(--dark); 
+            font-family: 'Manrope', sans-serif; cursor: none;
             height: 100dvh; width: 100vw; 
         }
 
-        /* FOND VIDEO */
-        .video-wrapper {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; pointer-events: none; overflow: hidden;
-        }
+        /* --- FOND CINEMATIQUE --- */
+        .video-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
         .video-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2, 2, 5, 0.85);
+            /* Vignette très sombre pour immersion */
+            background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, #000000 95%);
             z-index: 1;
         }
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
         #youtube-player {
-            position: absolute; top: 50%; left: 50%; 
-            width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh;
-            transform: translate(-50%, -50%) scale(1.15);
-            filter: grayscale(100%) contrast(1.2);
+            position: absolute; top: 50%; left: 50%; width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh;
+            transform: translate(-50%, -50%) scale(1.2); filter: grayscale(100%) brightness(0.4) contrast(1.1);
         }
 
-        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 2; mix-blend-mode: screen; }
+        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 3; mix-blend-mode: screen; }
         #video-input { position: absolute; opacity: 0; pointer-events: none; z-index: -1; }
 
-        /* UI */
+        /* --- UI PRESTIGE --- */
+        header {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 40px; box-sizing: border-box;
+            display: flex; justify-content: center; z-index: 20; pointer-events: none;
+        }
+        .brand { 
+            font-family: 'Cinzel', serif; font-size: 14px; color: #fff; letter-spacing: 4px; 
+            border-bottom: 1px solid rgba(212, 175, 55, 0.5); padding-bottom: 10px;
+        }
+
+        /* CURSEUR */
+        #cursor-group {
+            position: absolute; top: 50%; left: 50%; pointer-events: none; z-index: 100;
+            transform: translate(-50%, -50%); transition: opacity 0.3s;
+        }
+        #cursor-ring {
+            width: 50px; height: 50px; border: 1px solid rgba(255,255,255,0.4); border-radius: 50%;
+            transition: all 0.1s ease-out; position: absolute; top: -25px; left: -25px;
+        }
+        #cursor-dot {
+            width: 8px; height: 8px; background: var(--gold); border-radius: 50%;
+            position: absolute; top: -4px; left: -4px; box-shadow: 0 0 15px var(--gold);
+        }
+
+        /* --- CARTES NARRATIVES (Responsive & Lisible) --- */
+        .story-container {
+            position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 600px; text-align: left; pointer-events: none; z-index: 10;
+        }
+        .card {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: var(--card-bg); padding: 30px; box-sizing: border-box;
+            border-left: 3px solid var(--gold); border-radius: 0 4px 4px 0;
+            opacity: 0; transform: translateY(40px); 
+            transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+        .card.active { opacity: 1; transform: translateY(0); }
+
+        .card h2 { 
+            font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold); 
+            letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase;
+        }
+        .card h1 { 
+            font-family: 'Cormorant Garamond', serif; font-size: 36px; color: #fff; 
+            font-style: italic; margin-bottom: 20px; line-height: 1; 
+        }
+        .card p { 
+            font-family: 'Manrope', sans-serif; font-size: 15px; color: #ddd; 
+            line-height: 1.6; margin-bottom: 20px;
+        }
+        .quote {
+            font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 18px; color: #fff;
+            padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.3); margin-top: 15px;
+        }
+
+        /* FINAL */
+        #final-slide {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100%; text-align: center; opacity: 0; transition: opacity 1.5s; pointer-events: none; z-index: 15;
+        }
+        #final-slide.active { opacity: 1; }
+        .final-year { font-family: 'Cinzel', serif; font-size: 80px; color: #fff; letter-spacing: 10px; margin-bottom: 10px; text-shadow: 0 0 40px rgba(212,175,55,0.6); }
+        .final-msg { font-family: 'Cormorant Garamond', serif; font-size: 30px; color: var(--gold); font-style: italic; }
+
+        /* JAUGE */
+        .timeline {
+            position: absolute; right: 30px; top: 50%; transform: translateY(-50%);
+            height: 200px; width: 2px; background: rgba(255,255,255,0.1); z-index: 20;
+        }
+        .timeline-fill {
+            position: absolute; bottom: 0; width: 100%; height: 0%; 
+            background: var(--gold); box-shadow: 0 0 10px var(--gold); transition: height 0.1s;
+        }
+
+        /* START */
         #start-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--void); z-index: 9999; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         #start-btn {
-            background: transparent; border: 2px solid var(--cyan); color: var(--cyan);
-            padding: 20px 60px; font-family: 'Syncopate', sans-serif; font-weight: 700; font-size: 12px; 
-            cursor: pointer; transition: 0.3s; letter-spacing: 4px;
+            background: transparent; border: 1px solid var(--gold); color: var(--gold);
+            padding: 15px 50px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 3px;
+            cursor: pointer; transition: 0.3s; pointer-events: auto;
         }
-        #start-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 50px var(--cyan); }
-        
-        header {
-            position: absolute; top: 0; left: 0; width: 100%; padding: 40px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            z-index: 20; pointer-events: none; opacity: 0;
-        }
-        .brand { font-family: 'Syncopate', sans-serif; font-size: 14px; color: #fff; letter-spacing: 2px; }
-        .tag { border: 1px solid rgba(255,255,255,0.3); padding: 6px 16px; border-radius: 50px; color: #fff; font-size: 9px; letter-spacing: 2px; }
-
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
-        
-        /* BARRE DE PROGRESSION HORIZONTALE */
-        .progress-line {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 300px; height: 2px; background: rgba(255,255,255,0.1);
-            border-radius: 2px; overflow: hidden;
-        }
-        .progress-fill {
-            position: absolute; top: 0; left: 0; width: 0%; height: 100%; 
-            background: linear-gradient(to right, var(--magenta), var(--cyan), var(--lime));
-            box-shadow: 0 0 20px var(--cyan); transition: width 0.1s ease-out;
-        }
-
-        #magic-cursor {
-            position: absolute; width: 40px; height: 40px;
-            border: 2px solid var(--cyan); border-radius: 50%;
-            transform: translate(-50%, -50%); z-index: 50; opacity: 0; pointer-events: none;
-            transition: width 0.3s, height 0.3s, opacity 0.5s, border-color 0.3s;
-            mix-blend-mode: difference;
-        }
-
-        /* SLIDES */
-        .slide-container {
-            position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%);
-            width: 100%; text-align: center; pointer-events: none;
-        }
-        .slide { position: absolute; bottom: 0; left: 0; width: 100%; visibility: hidden; opacity: 0; transition: opacity 1s; }
-        .slide.active { visibility: visible; opacity: 1; }
-        
-        .mask { overflow: hidden; margin-bottom: 5px; }
-        .reveal-text { display: block; transform: translateY(100%); opacity: 0; transition: transform 1s cubic-bezier(0.2, 1, 0.3, 1), opacity 1s; }
-        .slide.active .reveal-text { transform: translateY(0); opacity: 1; }
-
-        p { 
-            font-family: 'Montserrat', sans-serif; font-size: 14px; line-height: 1.6; color: #ccc; 
-            max-width: 500px; margin: 0 auto; font-weight: 500;
-        }
+        #start-btn:hover { background: var(--gold); color: #000; }
         
         #hint {
-            position: absolute; bottom: 60px; width: 100%; text-align: center;
-            color: rgba(255,255,255,0.5); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+            position: absolute; bottom: 40px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.4); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; z-index: 10;
         }
     </style>
 
@@ -117,44 +144,58 @@
 </head>
 <body>
 
-    <div class="video-wrapper"><div id="youtube-player"></div><div class="video-overlay"></div></div>
+    <div class="video-wrapper"><div id="youtube-player"></div><div class="video-overlay"></div><div class="grain"></div></div>
 
     <div id="start-overlay">
-        <button id="start-btn">INITIALISER</button>
+        <div style="font-family:'Cormorant Garamond'; font-size:32px; color:#fff; font-style:italic; margin-bottom:20px;">L'Odyssée 2025-2026</div>
+        <button id="start-btn">ENTRER DANS L'HISTOIRE</button>
+        <div style="margin-top:20px; font-size:10px; color:#666;">Activez votre caméra ou utilisez la souris</div>
     </div>
 
     <video id="video-input" playsinline></video>
-    <div id="magic-cursor"></div>
+    <div id="cursor-group"><div id="cursor-ring"></div><div id="cursor-dot"></div></div>
 
-    <header>
-        <div class="brand">WJSBUTLER & CO</div>
-        <div class="tag">Timeline 2026</div>
-    </header>
+    <header><div class="brand">WJSBUTLER & CO</div></header>
 
-    <div id="ui-layer">
-        <div class="slide-container">
-            <div class="slide active" id="slide-0">
-                <div class="mask"><p><span class="reveal-text" style="color:var(--cyan)">GAUCHE : FONDATION (PASSÉ)</span></p></div>
-                <div class="mask"><p><span class="reveal-text" style="transition-delay:0.1s">Une structure solide bâtie en 2025.</span></p></div>
-            </div>
+    <div class="timeline"><div class="timeline-fill" id="prog-bar"></div></div>
 
-            <div class="slide" id="slide-1">
-                <div class="mask"><p><span class="reveal-text" style="color:var(--magenta)">CENTRE : FLUIDITÉ (PRÉSENT)</span></p></div>
-                <div class="mask"><p><span class="reveal-text" style="transition-delay:0.1s">Le service s'adapte en temps réel.</span></p></div>
-            </div>
-
-            <div class="slide" id="slide-2">
-                <div class="mask"><p><span class="reveal-text" style="color:var(--lime)">DROITE : VIBRANCE (FUTUR)</span></p></div>
-                <div class="mask"><p><span class="reveal-text" style="transition-delay:0.1s">2026 : L'explosion de votre succès.</span></p></div>
-            </div>
-        </div>
+    <div class="story-container" id="story-block">
         
-        <div id="hint">Balayez vers la droite pour avancer</div>
-        <div class="progress-line"><div class="progress-fill" id="prog-fill"></div></div>
+        <div id="slide-0" class="card active">
+            <h2>Bilan 2025</h2>
+            <h1>14 Voyageurs, 14 Histoires</h1>
+            <p>Cette année, vous avez ouvert votre maison à 14 chapitres de vie. La majorité furent des moments de grâce, une valse fluide gérée avec la rigueur d'une horloge suisse.</p>
+        </div>
+
+        <div id="slide-1" class="card">
+            <h2 style="color:var(--rose)">Philosophie</h2>
+            <h1>La Leçon de la Rose</h1>
+            <p>Il y a eu cette ombre. Ce voyageur difficile. Une épine. Mais comme l'écrivait Saint-Exupéry :</p>
+            <div class="quote">"C’est une folie de haïr toutes les roses parce que une épine vous a piqué... Il y aura toujours une autre occasion, un autre départ."</div>
+        </div>
+
+        <div id="slide-2" class="card">
+            <h2 style="color:var(--blue)">Inspiration</h2>
+            <h1>Waltz Into Space</h1>
+            <p>Levons les yeux. Comme dans la "Chambre aux étoiles", 2026 est une invitation à rêver plus grand. Nous transformerons chaque séjour en une expérience céleste.</p>
+        </div>
+
+        <div id="slide-3" class="card">
+            <h2 style="color:var(--gold)">Promesse</h2>
+            <h1>Le Refuge Absolu</h1>
+            <p>Pour cette nouvelle année, nous vous offrons la sérénité. Votre bien reste un havre de paix, protégé et sublimé par notre engagement.</p>
+        </div>
     </div>
 
+    <div id="final-slide">
+        <div class="final-year">2026</div>
+        <div class="final-msg">L'Excellence & L'Espoir</div>
+    </div>
+
+    <div id="hint">Levez la main pour avancer dans le temps</div>
+
     <script>
-        // --- YOUTUBE ---
+        // --- 1. YOUTUBE ---
         let player;
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtube-player', {
@@ -164,234 +205,210 @@
             });
         }
 
-        // --- START ---
+        // --- 2. START ---
         const btn = document.getElementById('start-btn');
         btn.addEventListener('click', () => {
             if(player && player.unMute) { player.unMute(); player.setVolume(100); }
-            gsap.to('#start-overlay', { opacity: 0, duration: 1, onComplete: () => document.getElementById('start-overlay').style.display = 'none' });
-            gsap.to('header', { opacity: 1, duration: 1, delay: 0.5 });
+            gsap.to('#start-overlay', { opacity: 0, duration: 2, ease: "power2.inOut", onComplete: () => document.getElementById('start-overlay').style.display = 'none' });
             initThreeJS();
             try { initCamera(); } catch(e) {}
-            revealSlide(0);
         });
 
-        const isMobile = window.innerWidth < 768;
-        const PARTICLE_COUNT = isMobile ? 35000 : 65000;
+        // --- STATE ---
+        const state = { 
+            targetProgress: 0, currentProgress: 0, 
+            handX: 0, handY: 0, useMouse: true,
+            activeSlide: 0
+        };
 
         const CONFIG = {
-            count: PARTICLE_COUNT, 
-            c1: new THREE.Color('#00FFFF'), // Cyan
-            c2: new THREE.Color('#FF00FF'), // Magenta
-            c3: new THREE.Color('#CCFF00')  // Lime
+            count: 70000,
+            c1: new THREE.Color(0xD4AF37), // Or (Horloge/Maison)
+            c2: new THREE.Color(0xe91e63), // Rose (Rose/Etoiles)
+            c3: new THREE.Color(0x88CCFF)  // Bleu (Ciel)
         };
 
-        const state = { 
-            targetProgress: 0, currentProgress: 0, activeSlide: 0,
-            handX: 0, handY: 0, handActive: 0, useMouse: true
-        };
+        // --- INPUTS ---
+        function updateInput(x, y) {
+            state.handX = x; state.handY = y;
+            // Film de 0 à 4.2 (5 étapes : 0->1->2->3->Final)
+            let prog = (1.0 - y) * 4.5; 
+            state.targetProgress = Math.max(0, Math.min(4.5, prog));
 
-        // --- INPUTS HORIZONTAUX ---
-        function handleInput(x, y) {
+            const cursor = document.getElementById('cursor-group');
+            gsap.to(cursor, { left: ((x * 0.5 + 0.5) * 100) + '%', top: ((-y * 0.5 + 0.5) * 100) + '%', duration: 0.1 });
+        }
+
+        window.addEventListener('mousemove', e => {
             if(state.useMouse) {
-                // LOGIQUE HORIZONTALE
-                // X va de 0 (gauche) à 1 (droite). On multiplie par 2.4 pour couvrir les 3 étapes
-                state.targetProgress = x * 2.4; 
-                
-                state.handX = x * 2 - 1; 
-                state.handY = -y * 2 + 1;
-                state.handActive = 1.0;
-                
-                const cursor = document.getElementById('magic-cursor');
-                cursor.style.opacity = 1;
-                cursor.style.left = (x * 100) + '%'; cursor.style.top = (y * 100) + '%';
-                
-                if(state.currentProgress > 1.5) cursor.style.borderColor = "var(--lime)";
-                else if(state.currentProgress > 0.5) cursor.style.borderColor = "var(--magenta)";
-                else cursor.style.borderColor = "var(--cyan)";
+                const x = (e.clientX / window.innerWidth) * 2 - 1;
+                const y = -(e.clientY / window.innerHeight) * 2 + 1;
+                updateInput(x, y);
             }
-        }
-        window.addEventListener('mousemove', e => handleInput(e.clientX/window.innerWidth, e.clientY/window.innerHeight));
-        window.addEventListener('touchmove', e => { e.preventDefault(); handleInput(e.touches[0].clientX/window.innerWidth, e.touches[0].clientY/window.innerHeight); }, {passive: false});
+        });
 
-        // --- TEXT ENGINE ---
-        function createTextParticles(text, count, fontSize) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 2048; canvas.height = 1024;
-            
-            ctx.font = `900 ${fontSize}px Montserrat`;
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            
-            const lines = text.split('\n');
-            const lineHeight = fontSize * 1.05;
-            const startY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
-
-            lines.forEach((line, i) => { ctx.fillText(line, canvas.width / 2, startY + i * lineHeight); });
-
-            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            const points = [];
-
-            for (let i = 0; i < data.length; i += 4) {
-                if (data[i] > 128) {
-                    const x = (i / 4) % canvas.width;
-                    const y = Math.floor((i / 4) / canvas.width);
-                    points.push({
-                        x: (x / canvas.width - 0.5) * 65,
-                        y: -(y / canvas.height - 0.5) * 32,
-                        z: 0
-                    });
-                }
-            }
-
-            const positions = new Float32Array(count * 3);
-            for (let i = 0; i < count; i++) {
-                const i3 = i * 3;
-                const pt = points[i % points.length];
-                positions[i3] = pt.x + (Math.random()-0.5)*0.5;
-                positions[i3+1] = pt.y + (Math.random()-0.5)*0.5;
-                positions[i3+2] = (Math.random()-0.5) * 2.0; 
-            }
-            return positions;
-        }
-
-        // --- THREE JS ---
+        // --- THREE JS & MATHS ---
         let scene, camera, renderer, material;
+
+        function getShapePoint(type, r) {
+            let x, y, z;
+            if (type === 0) { // HORLOGE
+                const a = Math.random() * Math.PI * 2;
+                if(Math.random()>0.15) { x=Math.cos(a)*r; y=Math.sin(a)*r; z=0; } // Cadran
+                else { const l=Math.random()*r; x=Math.cos(1.8)*l; y=Math.sin(1.8)*l; z=0; } // Aiguille 10h
+            } else if (type === 1) { // ROSE
+                // Rose paramétrique
+                const u = Math.random() * Math.PI * 2;
+                const v = Math.random() * Math.PI;
+                const k = 3; 
+                const rad = r * Math.sin(k*u) * Math.sin(v);
+                x=rad*Math.cos(u); y=rad*Math.sin(u); z=(Math.random()-0.5)*3;
+            } else if (type === 2) { // GALAXIE
+                const a = Math.random()*Math.PI*4; const rad = (a/(Math.PI*4))*r*1.5;
+                x=Math.cos(a)*rad; y=Math.sin(a)*rad; z=(Math.random()-0.5)*5;
+            } else if (type === 3) { // MAISON
+                const s = r*0.7; const rand=Math.random();
+                if(rand<0.3) { x=(Math.random()-0.5)*2*s; y=-s; } // Sol
+                else if(rand<0.6) { x=(Math.random()>0.5?s:-s); y=(Math.random()-0.5)*2*s - s/2; } // Murs
+                else { const t=Math.random(); if(Math.random()>0.5) {x=-s+t*s; y=s*0.5+t*s;} else {x=s-t*s; y=s*0.5+t*s;} } // Toit
+                z=0;
+            } else { // SOLEIL (Final)
+                const u=Math.random()*Math.PI*2; const v=Math.acos(2*Math.random()-1);
+                x=r*1.5*Math.sin(v)*Math.cos(u); y=r*1.5*Math.sin(v)*Math.sin(u); z=r*1.5*Math.cos(v);
+            }
+            return {x, y, z};
+        }
 
         function initThreeJS() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x050505, 0.03);
+            scene.fog = new THREE.FogExp2(0x020202, 0.02);
 
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 0, 40);
+            camera.position.set(0, 0, 50);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.outputEncoding = THREE.sRGBEncoding;
             document.body.appendChild(renderer.domElement);
 
-            const fontSize = isMobile ? 180 : 320;
-            const pos1 = createTextParticles("2025\nFONDATION", CONFIG.count, fontSize);
-            const pos2 = createTextParticles("FLUIDITÉ\n& AGILITÉ", CONFIG.count, fontSize*0.8);
-            const pos3 = createTextParticles("2026\nVIBRANCE", CONFIG.count, fontSize);
-            
-            const randoms = new Float32Array(CONFIG.count);
-            for(let i=0; i<CONFIG.count; i++) randoms[i] = Math.random();
-
             const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.BufferAttribute(pos1, 3));
+            const pos0 = new Float32Array(CONFIG.count * 3); // Horloge
+            const pos1 = new Float32Array(CONFIG.count * 3); // Rose
+            const pos2 = new Float32Array(CONFIG.count * 3); // Galaxie
+            const pos3 = new Float32Array(CONFIG.count * 3); // Maison
+            const pos4 = new Float32Array(CONFIG.count * 3); // Soleil
+            const aRandom = new Float32Array(CONFIG.count);
+
+            for(let i=0; i<CONFIG.count; i++) {
+                const i3 = i*3;
+                aRandom[i] = Math.random();
+
+                const p0 = getShapePoint(0, 8);
+                pos0[i3] = p0.x; pos0[i3+1] = p0.y; pos0[i3+2] = p0.z;
+
+                const p1 = getShapePoint(1, 8);
+                pos1[i3] = p1.x; pos1[i3+1] = p1.y; pos1[i3+2] = p1.z;
+
+                const p2 = getShapePoint(2, 8);
+                pos2[i3] = p2.x; pos2[i3+1] = p2.y; pos2[i3+2] = p2.z;
+
+                const p3 = getShapePoint(3, 8);
+                pos3[i3] = p3.x; pos3[i3+1] = p3.y; pos3[i3+2] = p3.z;
+
+                const p4 = getShapePoint(4, 8);
+                pos4[i3] = p4.x; pos4[i3+1] = p4.y; pos4[i3+2] = p4.z;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(pos0, 3));
+            geometry.setAttribute('pos0', new THREE.BufferAttribute(pos0, 3));
             geometry.setAttribute('pos1', new THREE.BufferAttribute(pos1, 3));
             geometry.setAttribute('pos2', new THREE.BufferAttribute(pos2, 3));
             geometry.setAttribute('pos3', new THREE.BufferAttribute(pos3, 3));
-            geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
+            geometry.setAttribute('pos4', new THREE.BufferAttribute(pos4, 3));
+            geometry.setAttribute('aRandom', new THREE.BufferAttribute(aRandom, 1));
 
-            // --- SHADER AVEC MOUVEMENT LATÉRAL ---
             material = new THREE.ShaderMaterial({
                 uniforms: {
                     uTime: { value: 0 },
                     uProgress: { value: 0 },
-                    uHand: { value: new THREE.Vector3(0,0,0) },
-                    uInteract: { value: 0 },
+                    uHand: { value: new THREE.Vector2(0,0) },
                     c1: { value: CONFIG.c1 }, c2: { value: CONFIG.c2 }, c3: { value: CONFIG.c3 }
                 },
                 vertexShader: `
                     uniform float uTime; uniform float uProgress;
-                    uniform vec3 uHand; uniform float uInteract;
-                    attribute vec3 pos1; attribute vec3 pos2; attribute vec3 pos3;
+                    uniform vec3 c1; uniform vec3 c2; uniform vec3 c3;
+                    uniform vec2 uHand;
+                    
+                    attribute vec3 pos0; attribute vec3 pos1; attribute vec3 pos2; attribute vec3 pos3; attribute vec3 pos4;
                     attribute float aRandom;
-                    varying float vLife; varying float vProg;
+                    varying float vAlpha; varying vec3 vColor;
 
-                    // Fonction d'easying pour des transitions fluides
-                    float easeInOutCubic(float x) {
-                        return x < 0.5 ? 4.0 * x * x * x : 1.0 - pow(-2.0 * x + 2.0, 3.0) / 2.0;
-                    }
+                    mat2 rot(float a) { return mat2(cos(a), -sin(a), sin(a), cos(a)); }
 
                     void main() {
-                        vProg = uProgress;
                         vec3 finalPos;
-                        
-                        // Respiration
-                        float floatY = sin(uTime * 2.0 + aRandom * 10.0) * 0.2;
-                        
-                        // Effet de vent latéral pour la transition horizontale
-                        // Si on avance (progress augmente), les particules semblent venir de la droite
-                        
-                        if(uProgress <= 1.0) {
-                            // TRANSITION 1->2
+                        vec3 color;
+                        float sparkle = 0.0;
+
+                        // MORPHING SEQUENCE
+                        if (uProgress <= 1.0) { // Horloge -> Rose
                             float t = smoothstep(0.0, 1.0, uProgress);
-                            float easeT = easeInOutCubic(t);
-                            
-                            // Explosion vers l'avant et la gauche
-                            float explode = sin(t * 3.14159); 
-                            vec3 chaos = vec3(
-                                -sin(aRandom * 10.0) * 20.0, // Mouvement latéral
-                                cos(aRandom * 10.0) * 10.0, 
-                                (aRandom - 0.5) * 40.0
-                            ) * explode;
-
-                            vec3 p1 = pos1 + vec3(0, floatY, 0);
-                            vec3 p2 = pos2 + vec3(0, floatY, 0);
-                            
-                            finalPos = mix(p1, p2, easeT) + chaos * 0.5;
-                        } else {
-                            // TRANSITION 2->3
+                            vec3 p0 = pos0; p0.xy *= rot(-uTime * 0.05); // Horloge tourne
+                            vec3 p1 = pos1; p1.xz *= rot(uTime * 0.1); // Rose tourne
+                            finalPos = mix(p0, p1, t);
+                            color = mix(c1, c2, t); // Or -> Rose
+                        } 
+                        else if (uProgress <= 2.0) { // Rose -> Galaxie
                             float t = smoothstep(1.0, 2.0, uProgress);
-                            float easeT = easeInOutCubic(t);
-                            
-                            // Explosion spirale horizontale
-                            float twist = sin(t * 3.14159) * 2.0;
-                            float c = cos(twist * aRandom);
-                            float s = sin(twist * aRandom);
-                            
-                            vec3 p2 = pos2 + vec3(0, floatY, 0);
-                            vec3 p3 = pos3 + vec3(0, floatY, 0);
-                            
-                            vec3 mixPos = mix(p2, p3, easeT);
-                            // Torsion sur l'axe Z pour accompagner le mouvement horizontal
-                            mixPos.xy = mat2(c, -s, s, c) * mixPos.xy;
-                            
-                            finalPos = mixPos;
+                            vec3 p1 = pos1; p1.xz *= rot(uTime * 0.1);
+                            vec3 p2 = pos2; p2.xz *= rot(uTime * 0.2); // Galaxie rapide
+                            finalPos = mix(p1, p2, t);
+                            color = mix(c2, c3, t); // Rose -> Bleu
+                        }
+                        else if (uProgress <= 3.0) { // Galaxie -> Maison
+                            float t = smoothstep(2.0, 3.0, uProgress);
+                            vec3 p2 = pos2; p2.xz *= rot(uTime * 0.2);
+                            vec3 p3 = pos3; // Maison fixe
+                            finalPos = mix(p2, p3, t);
+                            color = mix(c3, c1, t); // Bleu -> Or
+                        }
+                        else { // Maison -> Soleil (Final)
+                            float t = smoothstep(3.0, 4.0, uProgress);
+                            vec3 p3 = pos3;
+                            vec3 p4 = pos4; 
+                            p4 *= 1.0 + t * 0.5; // Expansion
+                            finalPos = mix(p3, p4, t);
+                            color = c1; // Or
+                            sparkle = t;
                         }
 
-                        // INTERACTION MAGNETIQUE (ELASTIQUE)
-                        vec3 handPos = vec3(uHand.x * 30.0, uHand.y * 18.0, 0.0);
+                        // Interaction Main
+                        vec3 handPos = vec3(uHand.x * 25.0, uHand.y * 15.0, 5.0);
                         float d = distance(finalPos, handPos);
-                        float force = max(0.0, 6.0 - d);
-                        
-                        if(force > 0.0) {
-                            vec3 push = normalize(finalPos - handPos);
-                            finalPos += push * force * uInteract * 2.0;
-                        }
+                        float hover = max(0.0, 1.0 - d / 5.0);
+                        finalPos += normalize(finalPos - handPos) * hover * 2.0;
+
+                        // Noise global
+                        finalPos.y += sin(finalPos.x * 0.5 + uTime) * 0.1;
 
                         vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
-                        
-                        float sparkle = 1.0 + sin(uTime * 10.0 + aRandom * 50.0) * 0.5;
-                        float size = (2.5 + force * 3.0) * sparkle * (300.0 / -mvPosition.z);
-                        
+                        float size = (3.0 + hover * 4.0) * (300.0 / -mvPosition.z);
+                        if(sparkle > 0.0) size *= (1.0 + sin(uTime*20.0 + aRandom*10.0)*0.5);
+
                         gl_PointSize = size;
                         gl_Position = projectionMatrix * mvPosition;
-                        vLife = force;
+
+                        vAlpha = 0.8 + hover * 0.2;
+                        vColor = color + vec3(hover * 0.5); 
                     }
                 `,
                 fragmentShader: `
-                    uniform vec3 c1; uniform vec3 c2; uniform vec3 c3;
-                    uniform float uProgress;
-                    varying float vLife; varying float vProg;
-
+                    varying float vAlpha; varying vec3 vColor;
                     void main() {
                         float d = length(gl_PointCoord - 0.5);
                         if(d > 0.5) discard;
-                        
-                        float alpha = 1.0 - smoothstep(0.3, 0.5, d);
-
-                        vec3 col;
-                        if(vProg <= 1.0) col = mix(c1, c2, smoothstep(0.2, 0.8, vProg));
-                        else col = mix(c2, c3, smoothstep(1.2, 1.8, vProg));
-
-                        col += vec3(1.0) * vLife * 0.8;
-
-                        gl_FragColor = vec4(col, alpha);
+                        float glow = 1.0 - smoothstep(0.1, 0.5, d);
+                        gl_FragColor = vec4(vColor, glow * vAlpha);
                     }
                 `,
                 transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -402,7 +419,7 @@
             animate();
         }
 
-        // --- CAMERA & HANDS ---
+        // --- CAMERA ---
         async function initCamera() {
             const videoEl = document.getElementById('video-input');
             const hands = new Hands({locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`});
@@ -411,75 +428,71 @@
                 if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
                     state.useMouse = false;
                     const lm = res.multiHandLandmarks[0];
-                    const index = lm[8]; // Bout du doigt
+                    const index = lm[8]; const wrist = lm[0];
                     
-                    // MAPPING HORIZONTAL (X)
-                    // X de la caméra va de 0 (gauche) à 1 (droite).
-                    // Mais en mode miroir (selfie), droite réelle = gauche écran.
-                    // On inverse pour que ce soit naturel : bouger main à droite -> avancer
-                    let x = 1.0 - index.x;
+                    let scrollY = 1.0 - wrist.y;
+                    state.targetProgress = scrollY * 4.2; 
                     
-                    state.targetProgress = x * 2.4; // 0 à 2.4 pour couvrir les 3 slides
-                    
-                    state.handX = (1.0 - index.x) * 2 - 1; 
-                    state.handY = -index.y * 2 + 1;
-                    state.handActive = 1.0;
-
-                    const cursor = document.getElementById('magic-cursor');
-                    cursor.style.opacity = 1;
-                    // Mise à jour visuelle (miroir)
-                    cursor.style.left = ((1.0-index.x)*100) + '%'; 
-                    cursor.style.top = (index.y*100) + '%';
-                    
-                    if(state.currentProgress > 1.5) cursor.style.borderColor = "var(--lime)";
-                    else if(state.currentProgress > 0.5) cursor.style.borderColor = "var(--magenta)";
-                    else cursor.style.borderColor = "var(--cyan)";
+                    const x = (1.0 - index.x) * 2 - 1; const y = -index.y * 2 + 1;
+                    updateInput(x, y);
                 }
             });
             const cam = new Camera(videoEl, { onFrame: async () => { await hands.send({image: videoEl}); }, width: 640, height: 480 });
             cam.start();
         }
 
-        function revealSlide(index) {
-            if(state.activeSlide === index) return;
-            const oldSlide = document.getElementById(`slide-${state.activeSlide}`);
-            if(oldSlide) {
-                oldSlide.classList.remove('active');
-                gsap.to(oldSlide.querySelectorAll('.reveal-text'), { y: '100%', opacity: 0, duration: 0.5 });
+        function updateInput(x, y) {
+            state.handX = x; state.handY = y;
+            const cursor = document.getElementById('cursor-group');
+            gsap.to(cursor, { left: ((x * 0.5 + 0.5) * 100) + '%', top: ((-y * 0.5 + 0.5) * 100) + '%', duration: 0.1 });
+        }
+
+        function updateSlides(p) {
+            let index = 0;
+            if (p >= 0.6) index = 1;
+            if (p >= 1.6) index = 2;
+            if (p >= 2.6) index = 3;
+            if (p >= 3.6) index = 4; // Final
+
+            if(state.activeSlide !== index) {
+                if (index === 4) {
+                    document.getElementById('story-block').style.opacity = 0;
+                    document.getElementById('final-slide').classList.add('active');
+                } else {
+                    document.getElementById('story-block').style.opacity = 1;
+                    document.getElementById('final-slide').classList.remove('active');
+                    
+                    const oldEl = document.getElementById(`slide-${state.activeSlide}`);
+                    if(oldEl) oldEl.classList.remove('active');
+                    const newEl = document.getElementById(`slide-${index}`);
+                    if(newEl) newEl.classList.add('active');
+                }
+                state.activeSlide = index;
             }
-            const newSlide = document.getElementById(`slide-${index}`);
-            if(newSlide) {
-                newSlide.classList.add('active');
-                gsap.fromTo(newSlide.querySelectorAll('.reveal-text'), { y: '120%', opacity: 0 }, { y: '0%', opacity: 1, duration: 1, ease: "power3.out", stagger: 0.1 });
-            }
-            state.activeSlide = index;
         }
 
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
             const time = clock.getElapsedTime();
-            state.currentProgress += (state.targetProgress - state.currentProgress) * 0.04;
+            state.currentProgress += (state.targetProgress - state.currentProgress) * 0.05;
 
             if(material) {
                 material.uniforms.uTime.value = time;
                 material.uniforms.uProgress.value = state.currentProgress;
-                material.uniforms.uHand.value.x += (state.handX - material.uniforms.uHand.value.x) * 0.08;
-                material.uniforms.uHand.value.y += (state.handY - material.uniforms.uHand.value.y) * 0.08;
-                material.uniforms.uInteract.value += (state.handActive - material.uniforms.uInteract.value) * 0.1;
+                material.uniforms.uHand.value.set(state.handX, state.handY);
             }
 
-            // Mouvement de caméra latéral pour accompagner le scroll
-            camera.position.x = (state.currentProgress - 1.0) * 5; 
-            camera.position.z = 40 + Math.sin(time * 0.1) * 2;
-            camera.lookAt(0,0,0);
-
-            document.getElementById('prog-fill').style.width = (Math.min(100, state.currentProgress * 40)) + "%";
+            // Recul de la caméra
+            let z = 45;
+            if (state.currentProgress > 3.5) z = 60;
+            camera.position.z += (z - camera.position.z) * 0.05;
             
-            if(state.currentProgress < 0.5) revealSlide(0);
-            else if(state.currentProgress < 1.5) revealSlide(1);
-            else revealSlide(2);
+            // Rotation lente
+            camera.rotation.z = Math.sin(time * 0.05) * 0.02;
 
+            document.getElementById('prog-bar').style.height = (Math.min(100, state.currentProgress * 25)) + "%";
+            updateSlides(state.currentProgress);
             renderer.render(scene, camera);
         }
 
@@ -488,9 +501,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        
-        document.getElementById('slide-0').classList.add('active');
-        gsap.fromTo('#slide-0 .reveal-text', { y: '120%', opacity: 0 }, { y: '0%', opacity: 1, duration: 1.2, ease: "power4.out", stagger: 0.1, delay: 2 });
         
         animate();
     </script>
