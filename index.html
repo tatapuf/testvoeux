@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WJSBUTLER 2026 | Cinematic Type</title>
+    <title>WJSBUTLER 2026 | Timeline Edition</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* Couleurs Pantone Digital */
             --cyan: #00FFFF;
             --magenta: #FF00FF;
             --lime: #CCFF00;
@@ -30,7 +29,7 @@
         }
         .video-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2, 2, 5, 0.85); /* Très sombre pour le contraste */
+            background: rgba(2, 2, 5, 0.85);
             z-index: 1;
         }
         #youtube-player {
@@ -66,37 +65,46 @@
 
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         
+        /* BARRE DE PROGRESSION HORIZONTALE */
         .progress-line {
-            position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
-            height: 200px; width: 1px; background: rgba(255,255,255,0.1);
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 2px; background: rgba(255,255,255,0.1);
+            border-radius: 2px; overflow: hidden;
         }
         .progress-fill {
-            position: absolute; bottom: 0; width: 3px; left: -1px; height: 0%; 
-            background: linear-gradient(to top, var(--magenta), var(--cyan));
-            box-shadow: 0 0 20px var(--cyan); transition: height 0.1s ease-out;
+            position: absolute; top: 0; left: 0; width: 0%; height: 100%; 
+            background: linear-gradient(to right, var(--magenta), var(--cyan), var(--lime));
+            box-shadow: 0 0 20px var(--cyan); transition: width 0.1s ease-out;
         }
 
         #magic-cursor {
-            position: absolute; width: 30px; height: 30px;
-            background: #fff; border-radius: 50%;
+            position: absolute; width: 40px; height: 40px;
+            border: 2px solid var(--cyan); border-radius: 50%;
             transform: translate(-50%, -50%); z-index: 50; opacity: 0; pointer-events: none;
-            transition: width 0.2s, height 0.2s, opacity 0.5s;
-            mix-blend-mode: overlay;
+            transition: width 0.3s, height 0.3s, opacity 0.5s, border-color 0.3s;
+            mix-blend-mode: difference;
         }
 
-        /* TEXTES SECONDAIRES */
+        /* SLIDES */
         .slide-container {
-            position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%);
             width: 100%; text-align: center; pointer-events: none;
         }
         .slide { position: absolute; bottom: 0; left: 0; width: 100%; visibility: hidden; opacity: 0; transition: opacity 1s; }
         .slide.active { visibility: visible; opacity: 1; }
+        
+        .mask { overflow: hidden; margin-bottom: 5px; }
+        .reveal-text { display: block; transform: translateY(100%); opacity: 0; transition: transform 1s cubic-bezier(0.2, 1, 0.3, 1), opacity 1s; }
+        .slide.active .reveal-text { transform: translateY(0); opacity: 1; }
 
-        p { font-size: 14px; color: #aaa; letter-spacing: 1px; text-transform: uppercase; margin: 0; font-weight: 700; }
+        p { 
+            font-family: 'Montserrat', sans-serif; font-size: 14px; line-height: 1.6; color: #ccc; 
+            max-width: 500px; margin: 0 auto; font-weight: 500;
+        }
         
         #hint {
-            position: absolute; bottom: 40px; width: 100%; text-align: center;
-            color: rgba(255,255,255,0.4); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+            position: absolute; bottom: 60px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.5); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
         }
     </style>
 
@@ -119,20 +127,30 @@
     <div id="magic-cursor"></div>
 
     <header>
-        <div class="brand">WJSBUTLER</div>
-        <div class="tag">2026 EDITION</div>
+        <div class="brand">WJSBUTLER & CO</div>
+        <div class="tag">Timeline 2026</div>
     </header>
 
     <div id="ui-layer">
-        <div class="progress-line"><div class="progress-fill" id="prog-fill"></div></div>
-
         <div class="slide-container">
-            <div class="slide active" id="slide-0"><p style="color:var(--cyan)">// PHASE 1 : STRUCTURE & RIGUEUR //</p></div>
-            <div class="slide" id="slide-1"><p style="color:var(--magenta)">// PHASE 2 : AGILITÉ & ADAPTATION //</p></div>
-            <div class="slide" id="slide-2"><p style="color:var(--lime)">// PHASE 3 : EXPANSION & SUCCÈS //</p></div>
+            <div class="slide active" id="slide-0">
+                <div class="mask"><p><span class="reveal-text" style="color:var(--cyan)">GAUCHE : FONDATION (PASSÉ)</span></p></div>
+                <div class="mask"><p><span class="reveal-text" style="transition-delay:0.1s">Une structure solide bâtie en 2025.</span></p></div>
+            </div>
+
+            <div class="slide" id="slide-1">
+                <div class="mask"><p><span class="reveal-text" style="color:var(--magenta)">CENTRE : FLUIDITÉ (PRÉSENT)</span></p></div>
+                <div class="mask"><p><span class="reveal-text" style="transition-delay:0.1s">Le service s'adapte en temps réel.</span></p></div>
+            </div>
+
+            <div class="slide" id="slide-2">
+                <div class="mask"><p><span class="reveal-text" style="color:var(--lime)">DROITE : VIBRANCE (FUTUR)</span></p></div>
+                <div class="mask"><p><span class="reveal-text" style="transition-delay:0.1s">2026 : L'explosion de votre succès.</span></p></div>
+            </div>
         </div>
         
-        <div id="hint">Levez la main pour avancer</div>
+        <div id="hint">Balayez vers la droite pour avancer</div>
+        <div class="progress-line"><div class="progress-fill" id="prog-fill"></div></div>
     </div>
 
     <script>
@@ -150,7 +168,6 @@
         const btn = document.getElementById('start-btn');
         btn.addEventListener('click', () => {
             if(player && player.unMute) { player.unMute(); player.setVolume(100); }
-            
             gsap.to('#start-overlay', { opacity: 0, duration: 1, onComplete: () => document.getElementById('start-overlay').style.display = 'none' });
             gsap.to('header', { opacity: 1, duration: 1, delay: 0.5 });
             initThreeJS();
@@ -173,15 +190,24 @@
             handX: 0, handY: 0, handActive: 0, useMouse: true
         };
 
-        // --- INPUTS ---
+        // --- INPUTS HORIZONTAUX ---
         function handleInput(x, y) {
             if(state.useMouse) {
-                state.targetProgress = (1.0 - y) * 2.4; 
-                state.handX = x * 2 - 1; state.handY = -y * 2 + 1;
+                // LOGIQUE HORIZONTALE
+                // X va de 0 (gauche) à 1 (droite). On multiplie par 2.4 pour couvrir les 3 étapes
+                state.targetProgress = x * 2.4; 
+                
+                state.handX = x * 2 - 1; 
+                state.handY = -y * 2 + 1;
                 state.handActive = 1.0;
+                
                 const cursor = document.getElementById('magic-cursor');
                 cursor.style.opacity = 1;
                 cursor.style.left = (x * 100) + '%'; cursor.style.top = (y * 100) + '%';
+                
+                if(state.currentProgress > 1.5) cursor.style.borderColor = "var(--lime)";
+                else if(state.currentProgress > 0.5) cursor.style.borderColor = "var(--magenta)";
+                else cursor.style.borderColor = "var(--cyan)";
             }
         }
         window.addEventListener('mousemove', e => handleInput(e.clientX/window.innerWidth, e.clientY/window.innerHeight));
@@ -193,7 +219,6 @@
             const ctx = canvas.getContext('2d');
             canvas.width = 2048; canvas.height = 1024;
             
-            // Montserrat Black pour un impact maximal
             ctx.font = `900 ${fontSize}px Montserrat`;
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -207,7 +232,6 @@
             const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             const points = [];
 
-            // Scan rapide
             for (let i = 0; i < data.length; i += 4) {
                 if (data[i] > 128) {
                     const x = (i / 4) % canvas.width;
@@ -224,7 +248,6 @@
             for (let i = 0; i < count; i++) {
                 const i3 = i * 3;
                 const pt = points[i % points.length];
-                // Ajout d'un z-jitter pour donner du volume au texte
                 positions[i3] = pt.x + (Math.random()-0.5)*0.5;
                 positions[i3+1] = pt.y + (Math.random()-0.5)*0.5;
                 positions[i3+2] = (Math.random()-0.5) * 2.0; 
@@ -237,7 +260,6 @@
 
         function initThreeJS() {
             scene = new THREE.Scene();
-            // Fog noir pour cacher la sortie des particules
             scene.fog = new THREE.FogExp2(0x050505, 0.03);
 
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -246,6 +268,7 @@
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputEncoding = THREE.sRGBEncoding;
             document.body.appendChild(renderer.domElement);
 
             const fontSize = isMobile ? 180 : 320;
@@ -263,8 +286,7 @@
             geometry.setAttribute('pos3', new THREE.BufferAttribute(pos3, 3));
             geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
 
-            // --- NOUVEAU SHADER "CINEMATIC" ---
-            // Fini le bruit chaotique. Place à l'interpolation physique et aux éclatements contrôlés.
+            // --- SHADER AVEC MOUVEMENT LATÉRAL ---
             material = new THREE.ShaderMaterial({
                 uniforms: {
                     uTime: { value: 0 },
@@ -280,7 +302,7 @@
                     attribute float aRandom;
                     varying float vLife; varying float vProg;
 
-                    // Fonction d'easying pour des transitions fluides (Cubic In/Out)
+                    // Fonction d'easying pour des transitions fluides
                     float easeInOutCubic(float x) {
                         return x < 0.5 ? 4.0 * x * x * x : 1.0 - pow(-2.0 * x + 2.0, 3.0) / 2.0;
                     }
@@ -289,44 +311,45 @@
                         vProg = uProgress;
                         vec3 finalPos;
                         
-                        // Respiration naturelle (Floating)
+                        // Respiration
                         float floatY = sin(uTime * 2.0 + aRandom * 10.0) * 0.2;
+                        
+                        // Effet de vent latéral pour la transition horizontale
+                        // Si on avance (progress augmente), les particules semblent venir de la droite
                         
                         if(uProgress <= 1.0) {
                             // TRANSITION 1->2
-                            // Effet: Explosion vers l'avant (Z) puis rassemblement
                             float t = smoothstep(0.0, 1.0, uProgress);
                             float easeT = easeInOutCubic(t);
                             
-                            // Explosion au milieu de la transition (t=0.5)
+                            // Explosion vers l'avant et la gauche
                             float explode = sin(t * 3.14159); 
                             vec3 chaos = vec3(
-                                cos(aRandom * 100.0) * 15.0, 
-                                sin(aRandom * 100.0) * 15.0, 
-                                (aRandom - 0.5) * 40.0 // Forte profondeur
+                                -sin(aRandom * 10.0) * 20.0, // Mouvement latéral
+                                cos(aRandom * 10.0) * 10.0, 
+                                (aRandom - 0.5) * 40.0
                             ) * explode;
 
                             vec3 p1 = pos1 + vec3(0, floatY, 0);
                             vec3 p2 = pos2 + vec3(0, floatY, 0);
                             
-                            finalPos = mix(p1, p2, easeT) + chaos * 0.5; // Mélange position + chaos
+                            finalPos = mix(p1, p2, easeT) + chaos * 0.5;
                         } else {
                             // TRANSITION 2->3
                             float t = smoothstep(1.0, 2.0, uProgress);
                             float easeT = easeInOutCubic(t);
                             
-                            // Effet: Implosion spirale
+                            // Explosion spirale horizontale
                             float twist = sin(t * 3.14159) * 2.0;
                             float c = cos(twist * aRandom);
                             float s = sin(twist * aRandom);
-                            mat2 rot = mat2(c, -s, s, c);
                             
                             vec3 p2 = pos2 + vec3(0, floatY, 0);
                             vec3 p3 = pos3 + vec3(0, floatY, 0);
                             
                             vec3 mixPos = mix(p2, p3, easeT);
-                            // On tord les particules pendant le mouvement
-                            mixPos.xy = rot * mixPos.xy;
+                            // Torsion sur l'axe Z pour accompagner le mouvement horizontal
+                            mixPos.xy = mat2(c, -s, s, c) * mixPos.xy;
                             
                             finalPos = mixPos;
                         }
@@ -334,10 +357,8 @@
                         // INTERACTION MAGNETIQUE (ELASTIQUE)
                         vec3 handPos = vec3(uHand.x * 30.0, uHand.y * 18.0, 0.0);
                         float d = distance(finalPos, handPos);
-                        float radius = 7.0;
-                        float force = max(0.0, radius - d);
+                        float force = max(0.0, 6.0 - d);
                         
-                        // La main "pousse" les particules, mais elles reviennent à leur place (Elasticité)
                         if(force > 0.0) {
                             vec3 push = normalize(finalPos - handPos);
                             finalPos += push * force * uInteract * 2.0;
@@ -345,7 +366,6 @@
 
                         vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
                         
-                        // Taille : Scintillement aléatoire pour effet "Poussière d'étoile"
                         float sparkle = 1.0 + sin(uTime * 10.0 + aRandom * 50.0) * 0.5;
                         float size = (2.5 + force * 3.0) * sparkle * (300.0 / -mvPosition.z);
                         
@@ -360,18 +380,15 @@
                     varying float vLife; varying float vProg;
 
                     void main() {
-                        // Cercle parfait
                         float d = length(gl_PointCoord - 0.5);
                         if(d > 0.5) discard;
                         
-                        // Halo doux
                         float alpha = 1.0 - smoothstep(0.3, 0.5, d);
 
                         vec3 col;
                         if(vProg <= 1.0) col = mix(c1, c2, smoothstep(0.2, 0.8, vProg));
                         else col = mix(c2, c3, smoothstep(1.2, 1.8, vProg));
 
-                        // Si interaction -> Blanc
                         col += vec3(1.0) * vLife * 0.8;
 
                         gl_FragColor = vec4(col, alpha);
@@ -385,7 +402,7 @@
             animate();
         }
 
-        // --- CAMERA ---
+        // --- CAMERA & HANDS ---
         async function initCamera() {
             const videoEl = document.getElementById('video-input');
             const hands = new Hands({locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`});
@@ -394,15 +411,29 @@
                 if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
                     state.useMouse = false;
                     const lm = res.multiHandLandmarks[0];
-                    const index = lm[8]; const wrist = lm[0];
+                    const index = lm[8]; // Bout du doigt
                     
-                    state.targetProgress = (1.0 - wrist.y) * 2.2; 
-                    state.handX = (1.0 - index.x) * 2 - 1; state.handY = -index.y * 2 + 1;
+                    // MAPPING HORIZONTAL (X)
+                    // X de la caméra va de 0 (gauche) à 1 (droite).
+                    // Mais en mode miroir (selfie), droite réelle = gauche écran.
+                    // On inverse pour que ce soit naturel : bouger main à droite -> avancer
+                    let x = 1.0 - index.x;
+                    
+                    state.targetProgress = x * 2.4; // 0 à 2.4 pour couvrir les 3 slides
+                    
+                    state.handX = (1.0 - index.x) * 2 - 1; 
+                    state.handY = -index.y * 2 + 1;
                     state.handActive = 1.0;
 
                     const cursor = document.getElementById('magic-cursor');
                     cursor.style.opacity = 1;
-                    cursor.style.left = ((1.0-index.x)*100) + '%'; cursor.style.top = (index.y*100) + '%';
+                    // Mise à jour visuelle (miroir)
+                    cursor.style.left = ((1.0-index.x)*100) + '%'; 
+                    cursor.style.top = (index.y*100) + '%';
+                    
+                    if(state.currentProgress > 1.5) cursor.style.borderColor = "var(--lime)";
+                    else if(state.currentProgress > 0.5) cursor.style.borderColor = "var(--magenta)";
+                    else cursor.style.borderColor = "var(--cyan)";
                 }
             });
             const cam = new Camera(videoEl, { onFrame: async () => { await hands.send({image: videoEl}); }, width: 640, height: 480 });
@@ -412,9 +443,15 @@
         function revealSlide(index) {
             if(state.activeSlide === index) return;
             const oldSlide = document.getElementById(`slide-${state.activeSlide}`);
-            if(oldSlide) oldSlide.classList.remove('active');
+            if(oldSlide) {
+                oldSlide.classList.remove('active');
+                gsap.to(oldSlide.querySelectorAll('.reveal-text'), { y: '100%', opacity: 0, duration: 0.5 });
+            }
             const newSlide = document.getElementById(`slide-${index}`);
-            if(newSlide) newSlide.classList.add('active');
+            if(newSlide) {
+                newSlide.classList.add('active');
+                gsap.fromTo(newSlide.querySelectorAll('.reveal-text'), { y: '120%', opacity: 0 }, { y: '0%', opacity: 1, duration: 1, ease: "power3.out", stagger: 0.1 });
+            }
             state.activeSlide = index;
         }
 
@@ -427,17 +464,17 @@
             if(material) {
                 material.uniforms.uTime.value = time;
                 material.uniforms.uProgress.value = state.currentProgress;
-                material.uniforms.uHand.value.x += (state.handX - material.uniforms.uHand.value.x) * 0.1;
-                material.uniforms.uHand.value.y += (state.handY - material.uniforms.uHand.value.y) * 0.1;
+                material.uniforms.uHand.value.x += (state.handX - material.uniforms.uHand.value.x) * 0.08;
+                material.uniforms.uHand.value.y += (state.handY - material.uniforms.uHand.value.y) * 0.08;
                 material.uniforms.uInteract.value += (state.handActive - material.uniforms.uInteract.value) * 0.1;
             }
 
-            let baseZ = 45;
-            if(state.currentProgress > 1.5) baseZ = 60; // Zoom out final
-            camera.position.z += (baseZ - camera.position.z) * 0.05;
-            camera.rotation.z = Math.sin(time * 0.05) * 0.02;
+            // Mouvement de caméra latéral pour accompagner le scroll
+            camera.position.x = (state.currentProgress - 1.0) * 5; 
+            camera.position.z = 40 + Math.sin(time * 0.1) * 2;
+            camera.lookAt(0,0,0);
 
-            document.getElementById('prog-fill').style.height = (Math.min(100, state.currentProgress * 40)) + "%";
+            document.getElementById('prog-fill').style.width = (Math.min(100, state.currentProgress * 40)) + "%";
             
             if(state.currentProgress < 0.5) revealSlide(0);
             else if(state.currentProgress < 1.5) revealSlide(1);
@@ -453,6 +490,8 @@
         });
         
         document.getElementById('slide-0').classList.add('active');
+        gsap.fromTo('#slide-0 .reveal-text', { y: '120%', opacity: 0 }, { y: '0%', opacity: 1, duration: 1.2, ease: "power4.out", stagger: 0.1, delay: 2 });
+        
         animate();
     </script>
 </body>
