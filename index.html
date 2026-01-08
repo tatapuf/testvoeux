@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WJSBUTLER 2026 | Cinematic Type</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Couleurs Pantone Digital */
+            --cyan: #00FFFF;
+            --magenta: #FF00FF;
+            --lime: #CCFF00;
+            --void: #050505;
+        }
+
+        body { 
+            margin: 0; overflow: hidden; background-color: var(--void); 
+            font-family: 'Montserrat', sans-serif; cursor: none;
+            height: 100dvh; width: 100vw; 
+        }
+
+        /* FOND VIDEO */
+        .video-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .video-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 2, 5, 0.85); /* Très sombre pour le contraste */
+            z-index: 1;
+        }
+        #youtube-player {
+            position: absolute; top: 50%; left: 50%; 
+            width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.77vh;
+            transform: translate(-50%, -50%) scale(1.15);
+            filter: grayscale(100%) contrast(1.2);
+        }
+
+        canvas { display: block; position: fixed; top: 0; left: 0; z-index: 2; mix-blend-mode: screen; }
+        #video-input { position: absolute; opacity: 0; pointer-events: none; z-index: -1; }
+
+        /* UI */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--void); z-index: 9999; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #start-btn {
+            background: transparent; border: 2px solid var(--cyan); color: var(--cyan);
+            padding: 20px 60px; font-family: 'Syncopate', sans-serif; font-weight: 700; font-size: 12px; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 4px;
+        }
+        #start-btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 50px var(--cyan); }
+        
+        header {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 40px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            z-index: 20; pointer-events: none; opacity: 0;
+        }
+        .brand { font-family: 'Syncopate', sans-serif; font-size: 14px; color: #fff; letter-spacing: 2px; }
+        .tag { border: 1px solid rgba(255,255,255,0.3); padding: 6px 16px; border-radius: 50px; color: #fff; font-size: 9px; letter-spacing: 2px; }
+
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        
+        .progress-line {
+            position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+            height: 200px; width: 1px; background: rgba(255,255,255,0.1);
+        }
+        .progress-fill {
+            position: absolute; bottom: 0; width: 3px; left: -1px; height: 0%; 
+            background: linear-gradient(to top, var(--magenta), var(--cyan));
+            box-shadow: 0 0 20px var(--cyan); transition: height 0.1s ease-out;
+        }
+
+        #magic-cursor {
+            position: absolute; width: 30px; height: 30px;
+            background: #fff; border-radius: 50%;
+            transform: translate(-50%, -50%); z-index: 50; opacity: 0; pointer-events: none;
+            transition: width 0.2s, height 0.2s, opacity 0.5s;
+            mix-blend-mode: overlay;
+        }
+
+        /* TEXTES SECONDAIRES */
+        .slide-container {
+            position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
+            width: 100%; text-align: center; pointer-events: none;
+        }
+        .slide { position: absolute; bottom: 0; left: 0; width: 100%; visibility: hidden; opacity: 0; transition: opacity 1s; }
+        .slide.active { visibility: visible; opacity: 1; }
+
+        p { font-size: 14px; color: #aaa; letter-spacing: 1px; text-transform: uppercase; margin: 0; font-weight: 700; }
+        
+        #hint {
+            position: absolute; bottom: 40px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.4); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+        }
+    </style>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <div class="video-wrapper"><div id="youtube-player"></div><div class="video-overlay"></div></div>
+
+    <div id="start-overlay">
+        <button id="start-btn">INITIALISER</button>
+    </div>
+
+    <video id="video-input" playsinline></video>
+    <div id="magic-cursor"></div>
+
+    <header>
+        <div class="brand">WJSBUTLER</div>
+        <div class="tag">2026 EDITION</div>
+    </header>
+
+    <div id="ui-layer">
+        <div class="progress-line"><div class="progress-fill" id="prog-fill"></div></div>
+
+        <div class="slide-container">
+            <div class="slide active" id="slide-0"><p style="color:var(--cyan)">// PHASE 1 : STRUCTURE & RIGUEUR //</p></div>
+            <div class="slide" id="slide-1"><p style="color:var(--magenta)">// PHASE 2 : AGILITÉ & ADAPTATION //</p></div>
+            <div class="slide" id="slide-2"><p style="color:var(--lime)">// PHASE 3 : EXPANSION & SUCCÈS //</p></div>
+        </div>
+        
+        <div id="hint">Levez la main pour avancer</div>
+    </div>
+
+    <script>
+        // --- YOUTUBE ---
+        let player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtube-player', {
+                videoId: 'AZ7MN4WpZRI',
+                playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'modestbranding': 1, 'loop': 1, 'playlist': 'AZ7MN4WpZRI', 'mute': 1 },
+                events: { 'onReady': (e) => e.target.playVideo() }
+            });
+        }
+
+        // --- START ---
+        const btn = document.getElementById('start-btn');
+        btn.addEventListener('click', () => {
+            if(player && player.unMute) { player.unMute(); player.setVolume(100); }
+            
+            gsap.to('#start-overlay', { opacity: 0, duration: 1, onComplete: () => document.getElementById('start-overlay').style.display = 'none' });
+            gsap.to('header', { opacity: 1, duration: 1, delay: 0.5 });
+            initThreeJS();
+            try { initCamera(); } catch(e) {}
+            revealSlide(0);
+        });
+
+        const isMobile = window.innerWidth < 768;
+        const PARTICLE_COUNT = isMobile ? 35000 : 65000;
+
+        const CONFIG = {
+            count: PARTICLE_COUNT, 
+            c1: new THREE.Color('#00FFFF'), // Cyan
+            c2: new THREE.Color('#FF00FF'), // Magenta
+            c3: new THREE.Color('#CCFF00')  // Lime
+        };
+
+        const state = { 
+            targetProgress: 0, currentProgress: 0, activeSlide: 0,
+            handX: 0, handY: 0, handActive: 0, useMouse: true
+        };
+
+        // --- INPUTS ---
+        function handleInput(x, y) {
+            if(state.useMouse) {
+                state.targetProgress = (1.0 - y) * 2.4; 
+                state.handX = x * 2 - 1; state.handY = -y * 2 + 1;
+                state.handActive = 1.0;
+                const cursor = document.getElementById('magic-cursor');
+                cursor.style.opacity = 1;
+                cursor.style.left = (x * 100) + '%'; cursor.style.top = (y * 100) + '%';
+            }
+        }
+        window.addEventListener('mousemove', e => handleInput(e.clientX/window.innerWidth, e.clientY/window.innerHeight));
+        window.addEventListener('touchmove', e => { e.preventDefault(); handleInput(e.touches[0].clientX/window.innerWidth, e.touches[0].clientY/window.innerHeight); }, {passive: false});
+
+        // --- TEXT ENGINE ---
+        function createTextParticles(text, count, fontSize) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 2048; canvas.height = 1024;
+            
+            // Montserrat Black pour un impact maximal
+            ctx.font = `900 ${fontSize}px Montserrat`;
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            
+            const lines = text.split('\n');
+            const lineHeight = fontSize * 1.05;
+            const startY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
+
+            lines.forEach((line, i) => { ctx.fillText(line, canvas.width / 2, startY + i * lineHeight); });
+
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const points = [];
+
+            // Scan rapide
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] > 128) {
+                    const x = (i / 4) % canvas.width;
+                    const y = Math.floor((i / 4) / canvas.width);
+                    points.push({
+                        x: (x / canvas.width - 0.5) * 65,
+                        y: -(y / canvas.height - 0.5) * 32,
+                        z: 0
+                    });
+                }
+            }
+
+            const positions = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3;
+                const pt = points[i % points.length];
+                // Ajout d'un z-jitter pour donner du volume au texte
+                positions[i3] = pt.x + (Math.random()-0.5)*0.5;
+                positions[i3+1] = pt.y + (Math.random()-0.5)*0.5;
+                positions[i3+2] = (Math.random()-0.5) * 2.0; 
+            }
+            return positions;
+        }
+
+        // --- THREE JS ---
+        let scene, camera, renderer, material;
+
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            // Fog noir pour cacher la sortie des particules
+            scene.fog = new THREE.FogExp2(0x050505, 0.03);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 40);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.body.appendChild(renderer.domElement);
+
+            const fontSize = isMobile ? 180 : 320;
+            const pos1 = createTextParticles("2025\nFONDATION", CONFIG.count, fontSize);
+            const pos2 = createTextParticles("FLUIDITÉ\n& AGILITÉ", CONFIG.count, fontSize*0.8);
+            const pos3 = createTextParticles("2026\nVIBRANCE", CONFIG.count, fontSize);
+            
+            const randoms = new Float32Array(CONFIG.count);
+            for(let i=0; i<CONFIG.count; i++) randoms[i] = Math.random();
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(pos1, 3));
+            geometry.setAttribute('pos1', new THREE.BufferAttribute(pos1, 3));
+            geometry.setAttribute('pos2', new THREE.BufferAttribute(pos2, 3));
+            geometry.setAttribute('pos3', new THREE.BufferAttribute(pos3, 3));
+            geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
+
+            // --- NOUVEAU SHADER "CINEMATIC" ---
+            // Fini le bruit chaotique. Place à l'interpolation physique et aux éclatements contrôlés.
+            material = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uProgress: { value: 0 },
+                    uHand: { value: new THREE.Vector3(0,0,0) },
+                    uInteract: { value: 0 },
+                    c1: { value: CONFIG.c1 }, c2: { value: CONFIG.c2 }, c3: { value: CONFIG.c3 }
+                },
+                vertexShader: `
+                    uniform float uTime; uniform float uProgress;
+                    uniform vec3 uHand; uniform float uInteract;
+                    attribute vec3 pos1; attribute vec3 pos2; attribute vec3 pos3;
+                    attribute float aRandom;
+                    varying float vLife; varying float vProg;
+
+                    // Fonction d'easying pour des transitions fluides (Cubic In/Out)
+                    float easeInOutCubic(float x) {
+                        return x < 0.5 ? 4.0 * x * x * x : 1.0 - pow(-2.0 * x + 2.0, 3.0) / 2.0;
+                    }
+
+                    void main() {
+                        vProg = uProgress;
+                        vec3 finalPos;
+                        
+                        // Respiration naturelle (Floating)
+                        float floatY = sin(uTime * 2.0 + aRandom * 10.0) * 0.2;
+                        
+                        if(uProgress <= 1.0) {
+                            // TRANSITION 1->2
+                            // Effet: Explosion vers l'avant (Z) puis rassemblement
+                            float t = smoothstep(0.0, 1.0, uProgress);
+                            float easeT = easeInOutCubic(t);
+                            
+                            // Explosion au milieu de la transition (t=0.5)
+                            float explode = sin(t * 3.14159); 
+                            vec3 chaos = vec3(
+                                cos(aRandom * 100.0) * 15.0, 
+                                sin(aRandom * 100.0) * 15.0, 
+                                (aRandom - 0.5) * 40.0 // Forte profondeur
+                            ) * explode;
+
+                            vec3 p1 = pos1 + vec3(0, floatY, 0);
+                            vec3 p2 = pos2 + vec3(0, floatY, 0);
+                            
+                            finalPos = mix(p1, p2, easeT) + chaos * 0.5; // Mélange position + chaos
+                        } else {
+                            // TRANSITION 2->3
+                            float t = smoothstep(1.0, 2.0, uProgress);
+                            float easeT = easeInOutCubic(t);
+                            
+                            // Effet: Implosion spirale
+                            float twist = sin(t * 3.14159) * 2.0;
+                            float c = cos(twist * aRandom);
+                            float s = sin(twist * aRandom);
+                            mat2 rot = mat2(c, -s, s, c);
+                            
+                            vec3 p2 = pos2 + vec3(0, floatY, 0);
+                            vec3 p3 = pos3 + vec3(0, floatY, 0);
+                            
+                            vec3 mixPos = mix(p2, p3, easeT);
+                            // On tord les particules pendant le mouvement
+                            mixPos.xy = rot * mixPos.xy;
+                            
+                            finalPos = mixPos;
+                        }
+
+                        // INTERACTION MAGNETIQUE (ELASTIQUE)
+                        vec3 handPos = vec3(uHand.x * 30.0, uHand.y * 18.0, 0.0);
+                        float d = distance(finalPos, handPos);
+                        float radius = 7.0;
+                        float force = max(0.0, radius - d);
+                        
+                        // La main "pousse" les particules, mais elles reviennent à leur place (Elasticité)
+                        if(force > 0.0) {
+                            vec3 push = normalize(finalPos - handPos);
+                            finalPos += push * force * uInteract * 2.0;
+                        }
+
+                        vec4 mvPosition = modelViewMatrix * vec4(finalPos, 1.0);
+                        
+                        // Taille : Scintillement aléatoire pour effet "Poussière d'étoile"
+                        float sparkle = 1.0 + sin(uTime * 10.0 + aRandom * 50.0) * 0.5;
+                        float size = (2.5 + force * 3.0) * sparkle * (300.0 / -mvPosition.z);
+                        
+                        gl_PointSize = size;
+                        gl_Position = projectionMatrix * mvPosition;
+                        vLife = force;
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 c1; uniform vec3 c2; uniform vec3 c3;
+                    uniform float uProgress;
+                    varying float vLife; varying float vProg;
+
+                    void main() {
+                        // Cercle parfait
+                        float d = length(gl_PointCoord - 0.5);
+                        if(d > 0.5) discard;
+                        
+                        // Halo doux
+                        float alpha = 1.0 - smoothstep(0.3, 0.5, d);
+
+                        vec3 col;
+                        if(vProg <= 1.0) col = mix(c1, c2, smoothstep(0.2, 0.8, vProg));
+                        else col = mix(c2, c3, smoothstep(1.2, 1.8, vProg));
+
+                        // Si interaction -> Blanc
+                        col += vec3(1.0) * vLife * 0.8;
+
+                        gl_FragColor = vec4(col, alpha);
+                    }
+                `,
+                transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+            });
+
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+            animate();
+        }
+
+        // --- CAMERA ---
+        async function initCamera() {
+            const videoEl = document.getElementById('video-input');
+            const hands = new Hands({locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`});
+            hands.setOptions({maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5});
+            hands.onResults(res => {
+                if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
+                    state.useMouse = false;
+                    const lm = res.multiHandLandmarks[0];
+                    const index = lm[8]; const wrist = lm[0];
+                    
+                    state.targetProgress = (1.0 - wrist.y) * 2.2; 
+                    state.handX = (1.0 - index.x) * 2 - 1; state.handY = -index.y * 2 + 1;
+                    state.handActive = 1.0;
+
+                    const cursor = document.getElementById('magic-cursor');
+                    cursor.style.opacity = 1;
+                    cursor.style.left = ((1.0-index.x)*100) + '%'; cursor.style.top = (index.y*100) + '%';
+                }
+            });
+            const cam = new Camera(videoEl, { onFrame: async () => { await hands.send({image: videoEl}); }, width: 640, height: 480 });
+            cam.start();
+        }
+
+        function revealSlide(index) {
+            if(state.activeSlide === index) return;
+            const oldSlide = document.getElementById(`slide-${state.activeSlide}`);
+            if(oldSlide) oldSlide.classList.remove('active');
+            const newSlide = document.getElementById(`slide-${index}`);
+            if(newSlide) newSlide.classList.add('active');
+            state.activeSlide = index;
+        }
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+            state.currentProgress += (state.targetProgress - state.currentProgress) * 0.04;
+
+            if(material) {
+                material.uniforms.uTime.value = time;
+                material.uniforms.uProgress.value = state.currentProgress;
+                material.uniforms.uHand.value.x += (state.handX - material.uniforms.uHand.value.x) * 0.1;
+                material.uniforms.uHand.value.y += (state.handY - material.uniforms.uHand.value.y) * 0.1;
+                material.uniforms.uInteract.value += (state.handActive - material.uniforms.uInteract.value) * 0.1;
+            }
+
+            let baseZ = 45;
+            if(state.currentProgress > 1.5) baseZ = 60; // Zoom out final
+            camera.position.z += (baseZ - camera.position.z) * 0.05;
+            camera.rotation.z = Math.sin(time * 0.05) * 0.02;
+
+            document.getElementById('prog-fill').style.height = (Math.min(100, state.currentProgress * 40)) + "%";
+            
+            if(state.currentProgress < 0.5) revealSlide(0);
+            else if(state.currentProgress < 1.5) revealSlide(1);
+            else revealSlide(2);
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        document.getElementById('slide-0').classList.add('active');
+        animate();
+    </script>
+</body>
+</html>
