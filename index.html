@@ -21,7 +21,7 @@
             --rose: #e91e63;
             --blue: #aaccff;
             --void: #000000;
-            --glass: rgba(5, 5, 8, 0.9); /* Fond texte lisible */
+            --glass: rgba(5, 5, 8, 0.9);
         }
 
         body { 
@@ -43,7 +43,7 @@
 
         canvas { display: block; position: fixed; top: 0; left: 0; z-index: 5; mix-blend-mode: screen; }
         
-        /* INPUT CAMERA (Invisible) */
+        /* INPUT CAMERA */
         #input-video { position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; z-index: -10; width: 640px; height: 480px; }
 
         /* --- UI HEADER --- */
@@ -66,7 +66,6 @@
             width: 6px; height: 6px; background: #fff; border-radius: 50%;
             position: absolute; top: -3px; left: -3px; box-shadow: 0 0 10px #fff;
         }
-        /* ETATS CURSEUR */
         .pinching #cursor-ring { 
             width: 30px; height: 30px; top: -15px; left: -15px; 
             border-color: var(--gold); border-width: 4px; box-shadow: 0 0 40px var(--gold); background: rgba(212, 175, 55, 0.1);
@@ -86,35 +85,36 @@
         .dimension-text {
             position: absolute; text-align: center; width: 90%; max-width: 800px;
             background: var(--glass); padding: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
-            opacity: 0; transform: scale(1.5); filter: blur(20px);
-            transition: all 1.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+            opacity: 0; transform: scale(3) translateZ(-100px); filter: blur(50px);
+            transition: all 1.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+            perspective: 1000px;
         }
-        .dimension-text.active { opacity: 1; transform: scale(1); filter: blur(0); }
+        .dimension-text.active { opacity: 1; transform: scale(1) translateZ(0); filter: blur(0); }
 
         .big-bg {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-family: 'Italiana', serif; font-size: 20vw; opacity: 0.05; color: #fff; white-space: nowrap; z-index: -1; pointer-events: none;
+            font-family: 'Italiana', serif; font-size: 20vw; opacity: 0.08; color: #fff; white-space: nowrap; z-index: -1;
         }
 
         .title {
-            font-family: 'Cinzel', serif; font-weight: 800; font-size: clamp(30px, 6vw, 60px);
+            font-family: 'Cinzel', serif; font-weight: 800; font-size: clamp(40px, 8vw, 100px);
             color: #fff; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 20px;
-            text-shadow: 0 0 30px rgba(0,0,0,0.8);
+            text-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
         
         .subtitle {
-            font-family: 'Italiana', serif; font-size: 16px; color: var(--gold);
-            margin-bottom: 30px; letter-spacing: 3px; text-transform: uppercase;
+            font-family: 'Italiana', serif; font-size: clamp(16px, 4vw, 30px);
+            color: var(--gold); margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase;
         }
         
         .body-text {
-            font-family: 'Manrope', sans-serif; font-size: clamp(16px, 2vw, 18px); color: #ddd;
+            font-family: 'Manrope', sans-serif; font-size: clamp(14px, 2vw, 20px); color: #ddd;
             line-height: 1.8; font-weight: 400;
         }
-        
+
         .quote {
-            font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px; color: #fff;
-            margin: 20px 0; border-left: 2px solid var(--gold); padding-left: 20px;
+            font-family: 'Italiana', serif; font-size: clamp(18px, 4vw, 30px); color: #eee;
+            margin: 40px auto; max-width: 80%; line-height: 1.3; font-style: italic;
         }
 
         /* BOUTON FINAL */
@@ -172,7 +172,8 @@
             <div class="subtitle">Bilan 2025</div>
             <div class="title">L'Héritage</div>
             <div class="body-text">
-                Cette année, vous avez accueilli 14 voyageurs. 14 histoires gérées avec la constance et la rigueur de l'Horloge de Tassin.
+                Cette année, 14 voyageurs ont écrit leur histoire chez vous.<br>
+                Une valse gérée avec la constance et la rigueur de l'Horloge de Tassin.
             </div>
         </div>
 
@@ -184,7 +185,7 @@
                 "C’est une folie de haïr toutes les roses parce que une épine vous a piqué..."
             </div>
             <div class="body-text">
-                Ne laissons pas un incident voiler l'avenir.
+                Ne laissons pas un incident voiler la lumière de l'avenir.
             </div>
         </div>
 
@@ -200,7 +201,7 @@
         <div id="dim-3" class="dimension-text">
             <div class="big-bg">2026</div>
             <div class="subtitle">Meilleurs Vœux</div>
-            <div class="title" style="color:var(--gold); font-size:100px;">2026</div>
+            <div class="title" style="color:var(--gold); font-size:120px;">2026</div>
             <div class="body-text">
                 EXCELLENCE • HARMONIE • SUCCÈS<br><br>
                 <span style="font-size:12px; opacity:0.7;">WJSBUTLER & CO</span>
@@ -209,13 +210,13 @@
 
     </div>
 
-    <button id="final-trigger-btn" onclick="triggerFinalSequence()">DÉCOUVRIR LES VŒUX</button>
     <div id="hint">Pincez un portail pour entrer</div>
+    <button id="final-trigger-btn" onclick="triggerFinalSequence()">DÉCOUVRIR LES VŒUX</button>
 
     <script>
         // --- 1. CONFIGURATION ---
         const CONFIG = {
-            count: 75000, 
+            count: 85000, 
             orbs: [
                 { x: -18, y: 0, color: 0xD4AF37 }, // Horloge (Or)
                 { x: 0, y: 6, color: 0xe91e63 },   // Rose (Rose Vif)
@@ -224,7 +225,7 @@
         };
 
         const state = {
-            mode: 'HUB', // HUB, WARP, DIMENSION
+            mode: 'HUB',
             handX: 0, handY: 0, 
             isPinching: false, lastX: 0, velocityX: 0,
             activeDim: -1,
@@ -247,42 +248,7 @@
             });
         }
 
-        // --- 3. GESTION CAMERA & INPUT (SECURISEE) ---
-        async function setupCamera() {
-            const videoElement = document.getElementById('input-video');
-            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            
-            hands.setOptions({
-                maxNumHands: 1,
-                modelComplexity: 1,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
-
-            hands.onResults(onHandsResults);
-
-            const cam = new Camera(videoElement, {
-                onFrame: async () => { await hands.send({image: videoElement}); },
-                width: 640, height: 480
-            });
-            await cam.start();
-        }
-
-        function onHandsResults(results) {
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                state.useMouse = false;
-                const landmarks = results.multiHandLandmarks[0];
-                const x = 1.0 - landmarks[8].x; // Miroir
-                const y = landmarks[8].y;
-                const thumb = landmarks[4];
-                const index = landmarks[8];
-                const dist = Math.sqrt(Math.pow(thumb.x - index.x, 2) + Math.pow(thumb.y - index.y, 2));
-                const pinching = dist < 0.05;
-                
-                updateInput(x, y, pinching);
-            }
-        }
-
+        // --- 3. INPUT GESTUEL ---
         function updateInput(x, y, pinching) {
             const dx = x - state.lastX;
             state.lastX = x;
@@ -298,7 +264,6 @@
             if(pinching) cursor.classList.add('pinching'); else cursor.classList.remove('pinching');
             if(isSwiping && state.mode === 'DIMENSION') cursor.classList.add('swiping'); else cursor.classList.remove('swiping');
 
-            // LOGIQUE
             if (state.mode === 'HUB' && pinching && !state.isPinching) {
                 checkHubInteraction();
             }
@@ -319,11 +284,11 @@
 
         // --- 4. NAVIGATION ---
         function checkHubInteraction() {
-            const hx = state.handX * 35; const hy = state.handY * 20;
+            const hx = state.handX * 30; const hy = state.handY * 20;
             let target = -1;
 
             CONFIG.orbs.forEach((orb, i) => {
-                if(Math.sqrt((hx-orb.x)**2 + (hy-orb.y)**2) < 7) target = i;
+                if(Math.sqrt((hx-orb.x)**2 + (hy-orb.y)**2) < 8) target = i;
             });
 
             if(target !== -1) enterDimension(target);
@@ -338,18 +303,19 @@
             document.getElementById('hint').innerText = "Balayez la main pour sortir";
             document.getElementById('final-trigger-btn').classList.remove('visible');
 
-            // WARP + MORPH
             gsap.to(material.uniforms.uWarp, { value: 1, duration: 0.8, ease: "power2.in", onComplete: () => {
                 morphTo(index);
                 state.mode = 'DIMENSION';
                 material.uniforms.uWarp.value = 0;
                 
-                // Caméra
-                const camZ = (index === 3) ? 60 : 25; 
+                const camZ = (index === 3) ? 60 : 30;
                 gsap.to(camera.position, { z: camZ, duration: 2, ease: "power2.out" });
 
-                // Texte
                 document.getElementById(`dim-${index}`).classList.add('active');
+                if(index === 3) {
+                    document.getElementById('hint').innerText = "BONNE ANNÉE";
+                    document.getElementById('hint').style.color = "var(--gold)";
+                }
             }});
         }
 
@@ -359,38 +325,41 @@
             const index = state.activeDim;
 
             document.getElementById(`dim-${index}`).classList.remove('active');
-            document.getElementById('hint').style.opacity = 0;
+            
+            // Gestion Caméra Responsive Retour
+            const isMobile = window.innerWidth < 768;
+            const hubZ = isMobile ? 80 : 50;
+            gsap.to(camera.position, { z: hubZ, duration: 1.5, ease: "power2.inOut" });
 
-            gsap.to(camera.position, { z: 50, duration: 1 });
-
-            // RETOUR HUB
             morphTo(-1);
             
             setTimeout(() => {
                 state.mode = 'HUB';
                 document.getElementById('hint').innerText = "Pincez un portail pour entrer";
-                document.getElementById('hint').style.opacity = 1;
+                document.getElementById('hint').style.color = "rgba(255,255,255,0.6)";
                 
                 if(state.visited.every(v=>v)) {
                     document.getElementById('final-trigger-btn').classList.add('visible');
+                    document.getElementById('hint').innerText = "Le portail final est ouvert au centre";
                 }
-            }, 1000);
+            }, 1200);
         }
 
         window.triggerFinalSequence = function() {
             enterDimension(3);
         }
 
-        // --- 5. THREE JS ---
+        // --- 5. THREE JS & SHAPES ---
         let scene, camera, renderer, material, geometry;
 
         function getShapePosition(type, i) {
-            const r = 10; let x, y, z;
+            const r = 12; let x, y, z;
+            
             if (type === 0) { // HORLOGE
                 const a = Math.random() * Math.PI * 2;
                 if(Math.random()>0.15) { x=Math.cos(a)*r; y=Math.sin(a)*r; z=0; }
                 else { const l=Math.random()*r; x=Math.cos(1.8)*l; y=Math.sin(1.8)*l; z=2; }
-            } else if (type === 1) { // ROSE
+            } else if (type === 1) { // ETOILE
                 const a=Math.random()*Math.PI*2; const rad=r*(0.5+0.5*Math.cos(5*a)); 
                 x=Math.cos(a)*rad; y=Math.sin(a)*rad; z=(Math.random()-0.5)*4;
             } else if (type === 2) { // MAISON
@@ -416,17 +385,22 @@
                 if (shapeIndex === -1) { // HUB
                     const idx = i % 3;
                     const r = 5 + Math.random();
-                    const th = Math.random() * Math.PI * 2; const ph = Math.acos(2 * Math.random() - 1);
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    
+                    let cx = CONFIG.orbs[idx].x;
+                    if(state.visited.every(v=>v) && Math.random() > 0.8) cx = 0; 
+
                     t = new THREE.Vector3(
-                        CONFIG.orbs[idx].x + r * Math.sin(ph) * Math.cos(th),
-                        CONFIG.orbs[idx].y + r * Math.sin(ph) * Math.sin(th),
-                        r * Math.cos(ph)
+                        cx + r * Math.sin(phi) * Math.cos(theta),
+                        CONFIG.orbs[idx].y + r * Math.sin(phi) * Math.sin(theta),
+                        r * Math.cos(phi)
                     );
                 } else { 
                     const idx = i % 3;
-                    if(shapeIndex === 3) t = getShapePosition(3, i); // Final: Tous
+                    if(shapeIndex === 3) t = getShapePosition(3, i);
                     else if (idx === shapeIndex) t = getShapePosition(shapeIndex, i);
-                    else t = new THREE.Vector3(1000, 1000, 1000); // Autres partent
+                    else t = new THREE.Vector3(1000, 1000, 1000); 
                 }
 
                 gsap.to(positions, {
@@ -437,10 +411,10 @@
             }
             
             let colorState = 0;
-            if(shapeIndex === 0) colorState = 1;
-            if(shapeIndex === 1) colorState = 2;
-            if(shapeIndex === 2) colorState = 3;
-            if(shapeIndex === 3) colorState = 4;
+            if (shapeIndex === 0) colorState = 1;
+            if (shapeIndex === 1) colorState = 2;
+            if (shapeIndex === 2) colorState = 3;
+            if (shapeIndex === 3) colorState = 4;
             gsap.to(material.uniforms.uColorState, { value: colorState, duration: 1.5 });
         }
 
@@ -449,7 +423,10 @@
             scene.fog = new THREE.FogExp2(0x000000, 0.015);
 
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 0, 50);
+            
+            // RESPONSIVE INITIAL
+            const isMobile = window.innerWidth < 768;
+            camera.position.set(0, 0, isMobile ? 80 : 50);
 
             renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -465,11 +442,12 @@
                 aOrbIndex[i] = idx;
                 aRandom[i] = Math.random();
 
-                const r = 5 + Math.random();
-                const th = Math.random() * Math.PI * 2; const ph = Math.acos(2 * Math.random() - 1);
-                pos[i3] = CONFIG.orbs[idx].x + r * Math.sin(ph) * Math.cos(th);
-                pos[i3+1] = CONFIG.orbs[idx].y + r * Math.sin(ph) * Math.sin(th);
-                pos[i3+2] = r * Math.cos(ph);
+                const r = 4 + Math.random();
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                pos[i3] = CONFIG.orbs[idx].x + r * Math.sin(phi) * Math.cos(theta);
+                pos[i3+1] = CONFIG.orbs[idx].y + r * Math.sin(phi) * Math.sin(theta);
+                pos[i3+2] = r * Math.cos(phi);
             }
 
             geometry = new THREE.BufferGeometry();
@@ -497,7 +475,6 @@
                     void main() {
                         vec3 pos = position;
                         vec3 col = vec3(0.5);
-                        
                         if(aOrbIndex < 0.5) col = c0; else if(aOrbIndex < 1.5) col = c1; else col = c2;
 
                         if (uColorState > 0.1) {
@@ -535,7 +512,7 @@
                     void main() {
                         float d = length(gl_PointCoord - 0.5);
                         if (d > 0.5) discard;
-                        gl_FragColor = vec4(vColor, vAlpha);
+                        gl_FragColor = vec4(vColor, vAlpha * (1.0 - smoothstep(0.1, 0.5, d)));
                     }
                 `,
                 transparent: true, blending: THREE.AdditiveBlending
@@ -546,36 +523,54 @@
             animate();
         }
 
+        // --- CAMERA ---
+        async function initCamera() {
+            const videoEl = document.getElementById('input-video');
+            const hands = new Hands({locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`});
+            hands.setOptions({maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5});
+            hands.onResults(res => {
+                if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
+                    state.useMouse = false;
+                    const lm = res.multiHandLandmarks[0];
+                    const index = lm[8]; const thumb = lm[4];
+                    const x = (1.0 - index.x) * 2 - 1; const y = -index.y * 2 + 1;
+                    const dist = Math.sqrt(Math.pow(index.x - thumb.x, 2) + Math.pow(index.y - thumb.y, 2));
+                    updateInput(x, y, dist < 0.05);
+                }
+            });
+            const cam = new Camera(videoEl, { onFrame: async () => { await hands.send({image: videoEl}); }, width: 640, height: 480 });
+            cam.start();
+        }
+
         function animate() {
             requestAnimationFrame(animate);
-            if(material) {
-                material.uniforms.uTime.value = performance.now() * 0.001;
-                material.uniforms.uHand.value.set(state.handX, state.handY);
-            }
+            if(material) material.uniforms.uTime.value = performance.now() * 0.001;
             renderer.render(scene, camera);
         }
 
+        // RESPONSIVE RESIZE
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Ajustement Caméra Hub
+            const isMobile = window.innerWidth < 768;
+            if(state.mode === 'HUB') {
+                gsap.to(camera.position, { z: isMobile ? 80 : 50, duration: 1 });
+            }
         });
 
-        // START SAFE
+        // START
         const startBtn = document.getElementById('start-btn');
-        if(startBtn) {
-            startBtn.addEventListener('click', () => {
-                const overlay = document.getElementById('start-screen');
-                if(overlay) {
-                    gsap.to(overlay, { opacity: 0, duration: 1, onComplete: () => overlay.style.display = 'none' });
-                }
-                
-                if(player && player.unMute) { player.unMute(); player.setVolume(100); }
-                
-                initThreeJS();
-                setupCamera().catch(e => console.log("Caméra non dispo, fallback souris"));
-            });
-        }
+        startBtn.addEventListener('click', () => {
+            if(player && player.unMute) { player.unMute(); player.setVolume(100); }
+            gsap.to('#start-overlay', { opacity: 0, duration: 1, onComplete: () => document.getElementById('start-overlay').style.display = 'none' });
+            
+            initThreeJS();
+            // Fallback si pas de cam
+            try { initCamera(); } catch(e) {}
+        });
 
     </script>
 </body>
