@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WJSBUTLER 2026 | L'Odyssée</title>
+    <title>WJSBUTLER 2026 | Quantum Story</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@200;400;800&family=Cinzel:wght@400;900&display=swap" rel="stylesheet">
@@ -43,8 +43,8 @@
 
         canvas { display: block; position: fixed; top: 0; left: 0; z-index: 5; mix-blend-mode: screen; }
         
-        /* INPUT CAMERA (Invisible) */
-        #input-video { position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; z-index: -10; width: 320px; height: 240px; }
+        /* INPUT CAMERA (Invisible mais présent) */
+        #input-video { position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; z-index: -10; width: 1px; height: 1px; }
 
         /* --- UI HEADER --- */
         header {
@@ -80,7 +80,7 @@
         .orb-label {
             position: absolute; color: rgba(255,255,255,0.6); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px;
             transform: translate(-50%, -50%); transition: all 0.3s; cursor: pointer; pointer-events: auto;
-            padding: 30px; /* Zone de clic large */
+            padding: 20px;
         }
         .orb-label:hover { color: #fff; text-shadow: 0 0 10px #fff; transform: translate(-50%, -60%); }
 
@@ -90,10 +90,10 @@
             z-index: 40;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             
             /* MOBILE DEFAULT (Bottom Sheet) */
-            bottom: 0; left: 0; width: 100%; height: 60vh;
+            bottom: 0; left: 0; width: 100%; height: 50vh;
             background: var(--glass); border-top: 2px solid var(--gold);
             transform: translateY(100%);
         }
@@ -143,8 +143,7 @@
         /* --- INSTRUCTIONS --- */
         #hint {
             position: absolute; bottom: 40px; width: 100%; text-align: center;
-            font-family: 'Manrope', sans-serif; font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.5);
-            text-transform: uppercase; z-index: 20; transition: opacity 0.5s;
+            color: rgba(255,255,255,0.5); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; z-index: 20; transition: opacity 0.5s;
         }
 
         /* --- DESKTOP OVERRIDES --- */
@@ -183,10 +182,10 @@
         <h1 style="color:var(--gold); font-family:'Cinzel'; margin-bottom:20px; text-align:center; font-size:30px;">BILAN &<br>PERSPECTIVES</h1>
         <div style="font-family:'Manrope'; font-size:12px; color:#888;">EXPÉRIENCE INTERACTIVE</div>
         <button id="start-btn">ENTRER</button>
-        <div style="margin-top:20px; color:#444; font-size:10px;">Contrôle Gestuel ou Souris</div>
+        <div id="status" style="margin-top:20px; color:#444; font-size:10px;">Caméra Requise</div>
     </div>
 
-    <video id="input-video" playsinline></video>
+    <video id="input-video" playsinline muted autoplay></video>
 
     <div id="cursor-group"><div id="cursor-ring"></div><div id="cursor-dot"></div></div>
 
@@ -248,7 +247,12 @@
             player = new YT.Player('youtube-player', {
                 videoId: 'AZ7MN4WpZRI',
                 playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'modestbranding': 1, 'loop': 1, 'playlist': 'AZ7MN4WpZRI', 'mute': 1 },
-                events: { 'onReady': (e) => e.target.playVideo() }
+                events: { 
+                    'onReady': (e) => {
+                        e.target.playVideo();
+                        document.getElementById('status').innerText = "Prêt. Cliquez pour entrer.";
+                    }
+                }
             });
         }
 
@@ -278,9 +282,22 @@
             const velocity = Math.abs(dx);
             const isSwiping = velocity > 0.04;
 
-            state.handX = x; state.handY = y;
+            // Sensibilité accrue pour Mobile (Multiplier les mouvements)
+            const sensitivity = (window.innerWidth < 768) ? 1.8 : 1.0;
+            
+            // On centre (0.5, 0.5) puis on applique la sensibilité
+            state.handX = (x * 2 - 1) * sensitivity;
+            state.handY = -(y * 2 - 1) * sensitivity;
+
+            // Clamp values
+            state.handX = Math.max(-1, Math.min(1, state.handX));
+            state.handY = Math.max(-1, Math.min(1, state.handY));
+
             const cursor = document.getElementById('cursor-group');
-            gsap.to(cursor, { left: ((x * 0.5 + 0.5) * 100) + '%', top: ((-y * 0.5 + 0.5) * 100) + '%', duration: 0.1 });
+            // Re-map to % for CSS
+            const cssLeft = (state.handX + 1) * 50;
+            const cssTop = (-state.handY + 1) * 50;
+            gsap.to(cursor, { left: cssLeft + '%', top: cssTop + '%', duration: 0.1 });
             
             if(pinching) cursor.classList.add('pinching'); else cursor.classList.remove('pinching');
             if(isSwiping && state.mode === 'DIMENSION') cursor.classList.add('swiping'); else cursor.classList.remove('swiping');
@@ -297,7 +314,7 @@
 
             // Hover Labels
             if(state.mode === 'HUB') {
-                const hx = x * 25; const hy = y * 15;
+                const hx = state.handX * 25; const hy = state.handY * 15;
                 CONFIG.orbs.forEach((orb, i) => {
                     const dist = Math.sqrt(Math.pow(hx - orb.x, 2) + Math.pow(hy - orb.y, 2));
                     const label = document.getElementById(`label-${i}`);
@@ -308,8 +325,8 @@
 
         window.addEventListener('mousemove', e => {
             if(state.useMouse) {
-                const x = (e.clientX / window.innerWidth) * 2 - 1;
-                const y = -(e.clientY / window.innerHeight) * 2 + 1;
+                const x = e.clientX / window.innerWidth;
+                const y = e.clientY / window.innerHeight;
                 updateInput(x, y, e.buttons === 1);
             }
         });
@@ -349,11 +366,10 @@
 
         window.closePanel = function() {
             state.mode = 'HUB';
-            document.getElementById('hint').innerText = "Pincez un orbe pour entrer";
             document.getElementById('info-panel').classList.remove('active');
+            document.getElementById('hint').innerText = "Pincez un orbe pour entrer";
             
             morphTo(-1);
-            
             const isMobile = window.innerWidth < 768;
             gsap.to(camera.position, { x: 0, z: isMobile ? 80 : 45, duration: 1.5 });
 
@@ -387,7 +403,7 @@
             if (type === 0) { // HORLOGE
                 const a = Math.random() * Math.PI * 2;
                 if(Math.random()>0.15) { x=Math.cos(a)*r; y=Math.sin(a)*r; z=0; }
-                else { const l=Math.random()*r; x=Math.cos(1.8)*l; y=Math.sin(1.8)*l; z=0; }
+                else { const l=Math.random()*r; x=Math.cos(1.5)*l; y=Math.sin(1.5)*l; z=0; }
             } else if (type === 1) { // ETOILE
                 const a=Math.random()*Math.PI*2; const rad=r*(0.5+0.5*Math.cos(5*a)); 
                 x=Math.cos(a)*rad; y=Math.sin(a)*rad; z=(Math.random()-0.5)*2;
@@ -512,10 +528,12 @@
             try {
                 const videoElement = document.getElementById('input-video');
                 const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-                hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
+                // Model Lite pour mobile
+                hands.setOptions({maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
                 hands.onResults(onHandsResults);
                 const cam = new Camera(videoElement, { onFrame: async () => { await hands.send({image: videoElement}); }, width: 640, height: 480 });
                 await cam.start();
+                document.getElementById('status').innerText = "Caméra active";
             } catch(e) {
                 console.log("Fallback Souris");
             }
@@ -538,7 +556,7 @@
             renderer.render(scene, camera);
         }
 
-        // --- RESIZE ---
+        // --- RESIZE & LABELS ---
         function updateLabels() {
             const isMobile = window.innerWidth < 768;
             const sx = isMobile ? 3 : 2.5; 
@@ -571,9 +589,7 @@
         if(startBtn) {
             startBtn.addEventListener('click', () => {
                 const overlay = document.getElementById('start-overlay');
-                if(overlay) {
-                    gsap.to(overlay, { opacity: 0, duration: 1, onComplete: () => overlay.style.display = 'none' });
-                }
+                if(overlay) gsap.to(overlay, { opacity: 0, duration: 1, onComplete: () => overlay.style.display = 'none' });
                 
                 if(player && player.unMute) { player.unMute(); player.setVolume(100); }
                 
