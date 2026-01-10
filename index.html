@@ -3,686 +3,482 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>L'Atelier des Particules - Édition Spectaculaire</title>
+    <title>L'Odyssée Créative - Mobile Experience</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,500;1,700&family=Cinzel:wght@400;600&family=Montserrat:wght@200;300;400&display=swap');
+        /* TYPOGRAPHIE IMMERSIVE */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&family=Playfair+Display:ital,wght@1,400;1,600&display=swap');
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body { 
-            margin: 0; overflow-x: hidden; overflow-y: scroll; 
-            background: #000; font-family: 'Montserrat', sans-serif;
-            -webkit-overflow-scrolling: touch; -webkit-font-smoothing: antialiased;
+            margin: 0; overflow: hidden; background-color: #000; 
+            font-family: 'Montserrat', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
         }
 
-        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1; }
-        #story { position: relative; z-index: 10; pointer-events: none; }
-
-        .chapter {
-            min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 60px 6vw 80px; text-align: center; pointer-events: none;
+        /* CONTENEUR UI */
+        #ui-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+            pointer-events: none; /* Laisse passer les clics vers le canvas */
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding-bottom: 8vh;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 40%);
         }
 
-        .chapter-overline {
-            font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 8px;
-            color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 15px;
-            opacity: 0; transform: translateY(20px); transition: all 1.4s cubic-bezier(0.19, 1, 0.22, 1);
+        /* TITRE CHAPITRE */
+        .chapter-tag {
+            font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; 
+            color: rgba(255,255,255,0.5); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.2);
+            padding: 5px 15px; border-radius: 20px; opacity: 0; transform: translateY(10px);
+            transition: all 1s ease;
         }
 
-        .chapter-number {
-            font-family: 'Montserrat', sans-serif; font-weight: 200; font-size: 0.75rem;
-            letter-spacing: 6px; color: rgba(255,255,255,0.5); text-transform: uppercase;
-            margin-bottom: 25px; opacity: 0; transform: translateY(25px);
-            transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1) 0.1s;
+        /* TEXTE NARRATIF */
+        .story-text {
+            font-family: 'Playfair Display', serif; font-size: clamp(1.4rem, 5vw, 2.2rem);
+            font-style: italic; text-align: center; color: #fff; line-height: 1.4;
+            max-width: 90%; padding: 0 20px; margin-bottom: 30px;
+            text-shadow: 0 4px 20px black;
+            opacity: 0; transform: translateY(20px); filter: blur(5px);
+            transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+        .story-text span { color: #ffcc00; } /* Highlight */
 
-        .chapter-title {
-            font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 700;
-            font-size: clamp(2.2rem, 9vw, 4.5rem); color: white; line-height: 1.15;
-            margin-bottom: 35px; opacity: 0; transform: translateY(40px);
-            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.2s;
-            text-shadow: 0 0 60px rgba(255,255,255,0.4); letter-spacing: -0.02em;
-        }
+        /* CLASSES D'ANIMATION */
+        .active { opacity: 1 !important; transform: translateY(0) !important; filter: blur(0) !important; }
 
-        .chapter-subtitle {
-            font-family: 'Cormorant Garamond', serif; font-weight: 400;
-            font-size: clamp(1.1rem, 3.5vw, 1.5rem); color: rgba(255,255,255,0.7);
-            margin-bottom: 30px; opacity: 0; transform: translateY(35px);
-            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.35s; font-style: italic; max-width: 550px;
-        }
-
-        .chapter-text {
-            font-family: 'Montserrat', sans-serif; font-weight: 300; 
-            font-size: clamp(0.95rem, 2.8vw, 1.15rem); color: rgba(255,255,255,0.75);
-            max-width: 520px; line-height: 1.85; opacity: 0; transform: translateY(30px);
-            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.5s; letter-spacing: 0.015em;
-        }
-
-        .chapter-quote {
-            font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400;
-            font-size: clamp(1.15rem, 3.2vw, 1.6rem); color: rgba(255,255,255,0.85);
-            margin-top: 40px; max-width: 480px; line-height: 1.7; opacity: 0; transform: translateY(25px);
-            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.65s;
-            border-left: 2px solid rgba(255,215,0,0.5); padding-left: 20px;
-        }
-
-        .chapter.visible .chapter-overline, .chapter.visible .chapter-number,
-        .chapter.visible .chapter-title, .chapter.visible .chapter-subtitle,
-        .chapter.visible .chapter-text, .chapter.visible .chapter-quote {
-            opacity: 1; transform: translateY(0);
-        }
-
-        .highlight { color: #ffd700; font-weight: 600; }
-        .glow { text-shadow: 0 0 20px currentColor; }
-
+        /* ÉCRAN DE DÉPART */
         #intro {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 3000;
-            background: radial-gradient(ellipse at center, #1a1520 0%, #000000 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 1.2s ease-out;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50;
+            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 1.5s; cursor: pointer; pointer-events: auto;
         }
-
-        #intro-logo {
-            font-family: 'Cinzel', serif; font-weight: 600; font-size: 0.7rem;
-            letter-spacing: 12px; color: rgba(255,255,255,0.4); margin-bottom: 50px;
-            text-transform: uppercase;
+        h1 {
+            font-family: 'Playfair Display', serif; font-size: 2.5rem; color: white; margin-bottom: 10px;
+            text-align: center; letter-spacing: 2px;
         }
-
-        #intro h1 {
-            font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 700;
-            color: white; font-size: clamp(2.5rem, 11vw, 5rem); text-align: center;
-            text-shadow: 0 0 80px rgba(255,255,255,0.6); letter-spacing: -0.01em;
-            margin-bottom: 25px; padding: 0 25px; line-height: 1.2;
+        .tap-hint {
+            font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: #888;
+            animation: pulse 2s infinite; margin-top: 20px;
         }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-        #intro-tagline {
-            font-family: 'Montserrat', sans-serif; font-weight: 300;
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem); color: rgba(255,255,255,0.6);
-            margin-bottom: 55px; text-align: center; max-width: 500px; padding: 0 30px; line-height: 1.7;
-        }
-
-        #intro button {
-            padding: 20px 55px; background: white; color: black; border: none; font-weight: 600;
-            font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; cursor: pointer;
-            box-shadow: 0 0 50px rgba(255,255,255,0.7); transition: all 0.4s; border-radius: 50px;
-            pointer-events: all; -webkit-tap-highlight-color: transparent; font-family: 'Montserrat', sans-serif;
-        }
-
-        #intro button:active { transform: scale(0.96); box-shadow: 0 0 80px rgba(255,255,255,0.9); }
-        #intro.hidden { opacity: 0; pointer-events: none; }
-
+        /* PROGRESS BAR */
         #progress-bar {
-            position: fixed; top: 0; left: 0; width: 0%; height: 2px;
-            background: linear-gradient(90deg, #ffd700, #ff6b6b, #4ecdc4);
-            z-index: 5000; transition: width 0.1s ease-out;
+            position: absolute; top: 0; left: 0; height: 4px; background: #ffcc00;
+            width: 0%; transition: width 1s linear; z-index: 20; box-shadow: 0 0 10px #ffcc00;
         }
 
-        #scroll-hint {
-            position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%);
-            color: rgba(255,255,255,0.5); font-size: 0.7rem; letter-spacing: 3px;
-            text-transform: uppercase; z-index: 100; animation: float 2.5s ease-in-out infinite;
-            pointer-events: none; font-family: 'Montserrat', sans-serif;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.5; }
-            50% { transform: translateX(-50%) translateY(-12px); opacity: 1; }
-        }
-
-        #finale {
-            min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: linear-gradient(to bottom, #000 0%, #0d0020 50%, #1a0033 100%); padding: 60px 20px;
-        }
-
-        #finale h2 {
-            font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 700;
-            font-size: clamp(2.5rem, 9vw, 5rem); color: white; text-align: center;
-            text-shadow: 0 0 100px rgba(170,136,255,1); margin-bottom: 30px; line-height: 1.2;
-        }
-
-        #finale p {
-            font-family: 'Montserrat', sans-serif; font-weight: 300;
-            font-size: clamp(1rem, 2.8vw, 1.3rem); color: rgba(255,255,255,0.7);
-            max-width: 550px; text-align: center; line-height: 1.8;
-        }
+        #canvas-webgl { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
     </style>
 </head>
 <body>
 
-    <div id="progress-bar"></div>
-
     <div id="intro">
-        <div id="intro-logo">Expérience Immersive</div>
-        <h1>L'Atelier<br>des Particules</h1>
-        <div id="intro-tagline">
-            Un voyage onirique au cœur de la création.<br>
-            Où chaque pensée devient lumière, chaque rêve prend forme.
-        </div>
-        <button id="btn-start">ENTRER DANS L'ATELIER</button>
+        <h1>L'Atelier des<br>Particules</h1>
+        <div class="tap-hint">Touchez l'écran pour commencer</div>
     </div>
 
-    <div id="canvas-container"></div>
-    <div id="scroll-hint" style="opacity: 0;">↓ Explorez l'Histoire ↓</div>
+    <div id="progress-bar"></div>
+    <div id="canvas-webgl"></div>
 
-    <div id="story">
-        <div class="chapter" data-shape="chaos" data-color="0x444444" data-effect="floating">
-            <div class="chapter-overline">Prologue</div>
-            <div class="chapter-number">Le Vide Primordial</div>
-            <div class="chapter-title">Au commencement<br>était le <span class="highlight glow">Chaos</span></div>
-            <div class="chapter-subtitle">Avant la forme, avant le sens, avant même le temps...</div>
-            <div class="chapter-text">
-                Dans l'obscurité infinie flottent des millions de particules égarées.
-                Elles dérivent sans but, attendant l'étincelle qui les éveillera.
-            </div>
-            <div class="chapter-quote">« Tout art commence dans le noir. »</div>
-        </div>
-
-        <div class="chapter" data-shape="brain" data-color="0xffcc00" data-effect="lightning">
-            <div class="chapter-overline">Acte I</div>
-            <div class="chapter-number">La Cognition</div>
-            <div class="chapter-title">L'<span class="highlight glow">Orage</span><br>Synaptique</div>
-            <div class="chapter-subtitle">86 milliards de neurones s'allument comme la foudre</div>
-            <div class="chapter-text">
-                Une première connexion s'établit. Puis une autre. Et soudain, comme un <strong>orage électrique</strong>,
-                des milliers de synapses crépitent simultanément. Les particules se connectent par des arcs lumineux.
-            </div>
-            <div class="chapter-quote">« Le cerveau est l'orage qui sculpte la réalité. »</div>
-        </div>
-
-        <div class="chapter" data-shape="dna" data-color="0x0099ff" data-effect="helix">
-            <div class="chapter-overline">Acte II</div>
-            <div class="chapter-number">L'Émotion</div>
-            <div class="chapter-title">La danse<br>de l'<span class="highlight glow">Âme</span></div>
-            <div class="chapter-subtitle">Quand la raison rencontre la passion</div>
-            <div class="chapter-text">
-                La créativité n'est pas statique. Elle <strong>pulse, se tord, respire</strong> comme un organisme vivant.
-                Les brins d'ADN s'enlacent dans une chorégraphie hypnotique, tissant nos rêves les plus profonds.
-            </div>
-            <div class="chapter-quote">« L'art sans émotion n'est que décoration. »</div>
-        </div>
-
-        <div class="chapter" data-shape="crystal" data-color="0xff3377" data-effect="shatter">
-            <div class="chapter-overline">Acte III</div>
-            <div class="chapter-number">La Forme</div>
-            <div class="chapter-title">La <span class="highlight glow">Cristallisation</span></div>
-            <div class="chapter-subtitle">Quand le chaos devient géométrie parfaite</div>
-            <div class="chapter-text">
-                Soudain, tout se fige. Les particules anarchiques <strong>vibrent intensément</strong> puis trouvent leur place,
-                s'assemblant en structures cristallines. Le chaos devient diamant, l'idée devient œuvre tangible.
-            </div>
-            <div class="chapter-quote">« La perfection : quand il n'y a plus rien à retirer. »</div>
-        </div>
-
-        <div class="chapter" data-shape="galaxy" data-color="0xaa77ff" data-effect="spiral">
-            <div class="chapter-overline">Acte IV</div>
-            <div class="chapter-number">L'Univers</div>
-            <div class="chapter-title">Vous êtes<br>le <span class="highlight glow">Créateur</span></div>
-            <div class="chapter-subtitle">Chaque geste sculpte des galaxies entières</div>
-            <div class="chapter-text">
-                Les particules <strong>spiralent en bras galactiques</strong>, répondant à votre présence.
-                Vous êtes le centre gravitationnel de cet univers en expansion infinie.
-            </div>
-            <div class="chapter-quote">« Nous sommes poussière d'étoiles contemplant les étoiles. »</div>
-        </div>
-
-        <div id="finale">
-            <h2>L'Atelier n'a<br>pas de fin</h2>
-            <p>Car chaque fin est un nouveau commencement. Les particules attendent votre prochain geste.</p>
-        </div>
+    <div id="ui-container">
+        <div id="ui-chapter" class="chapter-tag">INTRODUCTION</div>
+        <div id="ui-text" class="story-text"></div>
+        <div style="font-size: 0.7rem; color: #555; margin-top: 20px;">Touchez pour continuer</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
     <script>
-        gsap.registerPlugin(ScrollTrigger);
-
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const particleCount = isMobile ? 12000 : 35000;
-
-        console.log(`🎨 Particles: ${particleCount} | FX: ${isMobile ? 'Optimized' : 'Full'}`);
-
-        function getBrightTexture() {
-            const c = document.createElement('canvas'); c.width=64; c.height=64;
-            const ctx = c.getContext('2d');
-            const g1 = ctx.createRadialGradient(32,32,0, 32,32,18);
-            g1.addColorStop(0,'rgba(255,255,255,1)');
-            g1.addColorStop(0.3,'rgba(255,255,255,0.9)');
-            g1.addColorStop(1,'rgba(255,255,255,0)');
-            ctx.fillStyle=g1; ctx.fillRect(0,0,64,64);
-            return new THREE.CanvasTexture(c);
-        }
-
-        // THREE.JS
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.0018);
-
-        const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 2500);
-        camera.position.set(0, 0, isMobile ? 200 : 160);
-
-        const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true, powerPreference: "high-performance" });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        const composer = new THREE.EffectComposer(renderer);
-        composer.addPass(new THREE.RenderPass(scene, camera));
-        const bloom = new THREE.UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight), 
-            isMobile ? 1.8 : 2.5, 0.6, 0.05
-        );
-        composer.addPass(bloom);
-
-        // FORMES GÉOMÉTRIQUES
-        const Shapes = {
-            chaos: (i) => ({
-                x: (Math.random()-0.5) * 500,
-                y: (Math.random()-0.5) * 500,
-                z: (Math.random()-0.5) * 500
-            }),
-            brain: (i) => {
-                const r = 52 + Math.random() * 20;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                let x = r * Math.sin(phi) * Math.cos(theta);
-                let y = r * Math.sin(phi) * Math.sin(theta) * 0.7;
-                let z = r * Math.cos(phi);
-                x += Math.sign(x) * 16;
-                if(Math.random() > 0.7) y += Math.sin(theta * 5) * 6;
-                return {x, y, z};
+        // --- 1. HISTOIRE & SCÉNARIO DÉTAILLÉ ---
+        const story = [
+            {
+                // INTRO
+                chapter: "L'ORIGINE",
+                text: "La créativité n'est pas une magie.<br>C'est une <span>danse</span> entre des forces invisibles.",
+                mode: "cloud", // Nuage calme
+                color: { r: 1.0, g: 1.0, b: 1.0 }, // Blanc
+                storm: 0.0
             },
-            dna: (i) => {
-                const t = (i / particleCount) * Math.PI * 22;
-                const r = 35;
-                const h = 240;
-                const strand = (i % 2 === 0) ? 0 : Math.PI;
-                const x = r * Math.cos(t + strand);
-                const z = r * Math.sin(t + strand);
-                const y = (i / particleCount) * h - h/2;
-                if(i % 60 === 0) return {x: x*0.4, y, z: z*0.4};
-                return {x, y, z};
+            {
+                // MOUVEMENT 1 : IDÉES (ORAGE)
+                chapter: "I. LA MATIÈRE",
+                text: "Tout commence par les <span>Idées</span>.<br>Des étincelles chaotiques qui surgissent du néant.",
+                mode: "chaos", 
+                color: { r: 1.0, g: 0.9, b: 0.5 }, // Or pâle
+                storm: 0.5 // Début agitation
             },
-            crystal: (i) => {
-                const size = 65;
-                let x = (Math.random()-0.5)*size*2;
-                let y = (Math.random()-0.5)*size*2;
-                let z = (Math.random()-0.5)*size*2;
-                const sum = Math.abs(x)+Math.abs(y)+Math.abs(z);
-                if(sum > size) {
-                    const scale = size / sum;
-                    x*=scale; y*=scale; z*=scale;
-                }
-                if(Math.random() > 0.85) { x *= 0.75; y *= 0.75; z *= 0.75; }
-                return {x, y, z};
+            {
+                chapter: "I. LA MATIÈRE",
+                text: "C'est un <span>orage mental</span>.<br>Des micro-éclairs qui cherchent leur chemin dans l'obscurité.",
+                mode: "chaos",
+                color: { r: 1.0, g: 0.8, b: 0.2 }, // Or intense
+                storm: 1.0 // ORAGE TOTAL (Vibration forte)
             },
-            galaxy: (i) => {
-                const arm = (i % 5) * (2 * Math.PI / 5);
-                const dist = Math.pow(Math.random(), 1.2);
-                const angle = dist * 18;
-                const r = dist * 150;
-                const x = r * Math.cos(angle + arm);
-                const z = r * Math.sin(angle + arm);
-                const thickness = (1 - dist) * 22 + 6;
-                const y = (Math.random()-0.5) * thickness;
-                return {x, y, z};
+            {
+                // MOUVEMENT 2 : ÉMOTIONS (FLUIDE)
+                chapter: "II. LE FLUX",
+                text: "Puis, l'<span>Émotion</span> entre en scène.<br>Elle calme la tempête et crée des courants profonds.",
+                mode: "wave", // Vagues douces
+                color: { r: 0.2, g: 0.5, b: 1.0 }, // Bleu océan
+                storm: 0.0
+            },
+            {
+                chapter: "II. LE FLUX",
+                text: "L'idée ne suffit pas.<br>Elle doit être portée par un sentiment pour devenir vivante.",
+                mode: "wave",
+                color: { r: 0.1, g: 0.8, b: 0.9 }, // Cyan
+                storm: 0.0
+            },
+            {
+                // MOUVEMENT 3 : EMPATHIE (CONNEXION)
+                chapter: "III. LA CONNEXION",
+                text: "Voici l'<span>Empathie</span>.<br>C'est le réseau invisible qui nous relie aux autres.",
+                mode: "network", // Forme de réseau / Plexus
+                color: { r: 1.0, g: 0.4, b: 0.7 }, // Rose Magenta
+                storm: 0.0
+            },
+            {
+                chapter: "III. LA CONNEXION",
+                text: "Regardez les liens se tisser.<br>L'idée isolée devient une histoire partagée.",
+                mode: "network",
+                color: { r: 1.0, g: 0.2, b: 0.5 }, // Rose vif
+                storm: 0.0
+            },
+            {
+                // MOUVEMENT 4 : CRISTALLISATION (DIAMANT)
+                chapter: "IV. L'ŒUVRE",
+                text: "Soudain, le mouvement se fige.<br>C'est la <span>Cristallisation</span>.",
+                mode: "crystal", // Forme géométrique stable
+                color: { r: 0.5, g: 1.0, b: 0.5 }, // Vert émeraude / Blanc
+                storm: 0.0
+            },
+            {
+                chapter: "IV. L'ŒUVRE",
+                text: "Le chaos a trouvé sa forme.<br>Une structure parfaite, solide, utile.",
+                mode: "crystal",
+                color: { r: 1.0, g: 1.0, b: 1.0 }, // Diamant blanc
+                storm: 0.0
+            },
+            {
+                // FIN : GALAXIE
+                chapter: "HABITER LE MONDE",
+                text: "Tu n'es pas spectateur.<br>Tu es le <span>centre</span> de cet univers créatif.",
+                mode: "galaxy", // Spirale
+                color: { r: 0.6, g: 0.4, b: 1.0 }, // Violet cosmique
+                storm: 0.0
+            },
+            {
+                chapter: "FIN",
+                text: "L'Atelier est ouvert.<br>À toi de créer.",
+                mode: "galaxy",
+                color: { r: 1.0, g: 1.0, b: 1.0 },
+                storm: 0.2
             }
-        };
+        ];
 
-        // GÉOMÉTRIE
-        const geo = new THREE.BufferGeometry();
-        const pos = new Float32Array(particleCount*3);
-        const target = new Float32Array(particleCount*3);
-        const randoms = new Float32Array(particleCount);
-        const sizes = new Float32Array(particleCount);
+        let currentStep = -1;
 
-        for(let i=0; i<particleCount; i++){
-            const chaos = Shapes.chaos(i);
-            pos[i*3] = chaos.x; pos[i*3+1] = chaos.y; pos[i*3+2] = chaos.z;
-            randoms[i] = Math.random();
-            sizes[i] = 0.5 + Math.random() * 1.5;
+        // --- 2. MOTEUR GRAPHIQUE (THREE.JS) ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.015); // Brouillard pour la profondeur
+
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // Ajustement caméra pour mobile (plus loin si écran étroit)
+        function adjustCamera() {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.position.z = aspect < 1 ? 140 : 100;
         }
-        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        geo.setAttribute('target', new THREE.BufferAttribute(target, 3));
-        geo.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
-        geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+        adjustCamera();
 
-        // LIGNE DE CONNEXION (Pour effet Lightning)
-        const lineGeo = new THREE.BufferGeometry();
-        const linePositions = new Float32Array(6000); // 1000 lignes max
-        lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-        const lineMat = new THREE.LineBasicMaterial({ 
-            color: 0xffcc00, 
-            transparent: true, 
-            opacity: 0,
-            blending: THREE.AdditiveBlending 
-        });
-        const connectionLines = new THREE.LineSegments(lineGeo, lineMat);
-        scene.add(connectionLines);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // Optimisation iPhone : On limite le pixel ratio pour éviter la surchauffe
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+        document.getElementById('canvas-webgl').appendChild(renderer.domElement);
 
-        // SHADER AVEC EFFETS
-        const mat = new THREE.ShaderMaterial({
+        // --- 3. CRÉATION DE LA TEXTURE (Halo Lumineux) ---
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+            // Cœur blanc solide + Halo dégradé
+            gradient.addColorStop(0, 'rgba(255,255,255,1)'); 
+            gradient.addColorStop(0.3, 'rgba(255,255,255,0.4)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 64, 64);
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        // --- 4. SYSTÈME DE PARTICULES (MORPHING) ---
+        const particleCount = 15000; // Optimisé pour iPhone
+        const geometry = new THREE.BufferGeometry();
+        
+        const positions = new Float32Array(particleCount * 3);
+        const targets = new Float32Array(particleCount * 3); // Position cible
+        const randoms = new Float32Array(particleCount); // Pour animer différemment chaque point
+
+        // Init : Nuage aléatoire
+        for(let i=0; i<particleCount; i++) {
+            positions[i*3] = (Math.random()-0.5)*300;
+            positions[i*3+1] = (Math.random()-0.5)*300;
+            positions[i*3+2] = (Math.random()-0.5)*300;
+            randoms[i] = Math.random();
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('target', new THREE.BufferAttribute(targets, 3));
+        geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
+
+        // --- LE SHADER (Cerveau Visuel) ---
+        const material = new THREE.ShaderMaterial({
             uniforms: {
                 uTime: { value: 0 },
-                uColor: { value: new THREE.Color(0x666666) },
-                uTexture: { value: getBrightTexture() },
-                uRatio: { value: window.devicePixelRatio },
-                uEffect: { value: 0 }, // 0=floating, 1=lightning, 2=helix, 3=shatter, 4=spiral
-                uEffectIntensity: { value: 0 }
+                uColor: { value: new THREE.Color(1, 1, 1) },
+                uStorm: { value: 0.0 }, // Intensité de l'orage
+                uTexture: { value: createGlowTexture() },
+                uRatio: { value: renderer.getPixelRatio() }
             },
             vertexShader: `
                 uniform float uTime;
+                uniform float uStorm;
                 uniform float uRatio;
-                uniform float uEffect;
-                uniform float uEffectIntensity;
+                attribute vec3 target;
                 attribute float aRandom;
-                attribute float aSize;
                 varying float vAlpha;
-                varying float vBrightness;
 
-                vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-                vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-                vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-                vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
-
-                float snoise(vec3 v) {
-                    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-                    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-                    vec3 i  = floor(v + dot(v, C.yyy));
-                    vec3 x0 = v - i + dot(i, C.xxx);
-                    vec3 g = step(x0.yzx, x0.xyz);
-                    vec3 l = 1.0 - g;
-                    vec3 i1 = min(g.xyz, l.zxy);
-                    vec3 i2 = max(g.xyz, l.zxy);
-                    vec3 x1 = x0 - i1 + C.xxx;
-                    vec3 x2 = x0 - i2 + C.yyy;
-                    vec3 x3 = x0 - D.yyy;
-                    i = mod289(i);
-                    vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0))
-                        + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-                        + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-                    float n_ = 0.142857142857;
-                    vec3 ns = n_ * D.wyz - D.xzx;
-                    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-                    vec4 x_ = floor(j * ns.z);
-                    vec4 y_ = floor(j - 7.0 * x_);
-                    vec4 x = x_ *ns.x + ns.yyyy;
-                    vec4 y = y_ *ns.x + ns.yyyy;
-                    vec4 h = 1.0 - abs(x) - abs(y);
-                    vec4 b0 = vec4(x.xy, y.xy);
-                    vec4 b1 = vec4(x.zw, y.zw);
-                    vec4 s0 = floor(b0)*2.0 + 1.0;
-                    vec4 s1 = floor(b1)*2.0 + 1.0;
-                    vec4 sh = -step(h, vec4(0.0));
-                    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
-                    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
-                    vec3 p0 = vec3(a0.xy, h.x);
-                    vec3 p1 = vec3(a0.zw, h.y);
-                    vec3 p2 = vec3(a1.xy, h.z);
-                    vec3 p3 = vec3(a1.zw, h.w);
-                    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
-                    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-                    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-                    m = m * m;
-                    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-                }
+                // Fonction de bruit simple
+                float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123); }
 
                 void main() {
-                    vec3 p = position;
+                    vec3 pos = position; // Position interpolée par le JS (Morphing)
 
-                    // EFFET 0: FLOATING (Chaos)
-                    float breath = sin(uTime * 0.8 + aRandom * 8.0) * 2.0;
-                    p += normalize(p) * breath;
-
-                    // EFFET 1: LIGHTNING (Orage synaptique)
-                    if(uEffect > 0.5 && uEffect < 1.5) {
-                        float lightning = step(0.98, aRandom) * sin(uTime * 30.0 + aRandom * 100.0);
-                        lightning *= uEffectIntensity;
-                        p += vec3(
-                            sin(uTime * 50.0 + aRandom * 20.0) * lightning * 15.0,
-                            cos(uTime * 40.0 + aRandom * 30.0) * lightning * 15.0,
-                            sin(uTime * 45.0 + aRandom * 25.0) * lightning * 15.0
-                        );
-                        vBrightness = 1.0 + lightning * 3.0;
+                    // 1. ANIMATION ORAGE (Chaos vibrant)
+                    if (uStorm > 0.1) {
+                        // Secousse rapide et aléatoire
+                        float shake = sin(uTime * 20.0 + aRandom * 100.0) * uStorm * 2.0;
+                        pos += normalize(pos) * shake;
                     }
 
-                    // EFFET 2: HELIX (Torsion ADN)
-                    if(uEffect > 1.5 && uEffect < 2.5) {
-                        float twist = sin(uTime * 2.0 + p.y * 0.05) * uEffectIntensity * 8.0;
-                        float angle = atan(p.z, p.x) + twist;
-                        float radius = length(vec2(p.x, p.z));
-                        p.x = cos(angle) * radius;
-                        p.z = sin(angle) * radius;
-                    }
+                    // 2. ANIMATION DOUCE (Respiration)
+                    float breathe = sin(uTime * 1.5 + aRandom * 10.0) * 0.5;
+                    pos.y += breathe;
 
-                    // EFFET 3: SHATTER (Vibration cristal)
-                    if(uEffect > 2.5 && uEffect < 3.5) {
-                        float shatter = sin(uTime * 60.0 + length(p) * 5.0) * uEffectIntensity;
-                        p += normalize(p) * shatter * 8.0;
-                        vBrightness = 0.8 + abs(shatter) * 0.8;
-                    }
+                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                    gl_Position = projectionMatrix * mvPosition;
 
-                    // EFFET 4: SPIRAL (Rotation galaxie)
-                    if(uEffect > 3.5) {
-                        float rotation = uTime * 0.5 * uEffectIntensity;
-                        float angle = atan(p.z, p.x) + rotation;
-                        float radius = length(vec2(p.x, p.z));
-                        p.x = cos(angle) * radius;
-                        p.z = sin(angle) * radius;
-                    }
+                    // 3. TAILLE DYNAMIQUE
+                    // Les particules scintillent pendant l'orage
+                    float flicker = 1.0;
+                    if(uStorm > 0.5) flicker = 0.5 + random(vec2(uTime, aRandom));
 
-                    // Turbulence globale
-                    float turbulence = snoise(p * 0.015 + uTime * 0.1);
-                    p += normalize(p) * turbulence * 3.5;
+                    // Taille adaptée à l'écran (Responsive)
+                    // Plus gros sur mobile pour être visible
+                    float baseSize = 40.0 * (1.0 + aRandom); 
+                    gl_PointSize = (baseSize * uRatio * flicker) / -mvPosition.z;
 
-                    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-                    gl_Position = projectionMatrix * mv;
-
-                    float baseSize = ${isMobile ? '58.0' : '70.0'};
-                    float size = (baseSize + aRandom * 38.0) * aSize;
-                    float twinkle = sin(uTime * 3.0 + aRandom * 20.0) * 0.35 + 1.0;
-                    size *= twinkle;
-
-                    gl_PointSize = (size * uRatio) / -mv.z;
-                    vAlpha = smoothstep(450.0, 50.0, -mv.z);
-                    
-                    if(uEffect < 0.5 || uEffect > 1.5) {
-                        vBrightness = 0.7 + aRandom * 0.6 + turbulence * 0.2;
-                    }
+                    // 4. OPACITÉ (Fade out au loin)
+                    vAlpha = smoothstep(200.0, 10.0, -mvPosition.z);
                 }
             `,
             fragmentShader: `
                 uniform vec3 uColor;
+                uniform float uStorm;
                 uniform sampler2D uTexture;
                 varying float vAlpha;
-                varying float vBrightness;
-                
+
                 void main() {
                     vec4 tex = texture2D(uTexture, gl_PointCoord);
-                    vec3 finalColor = uColor * vBrightness;
-                    gl_FragColor = vec4(finalColor, tex.a * vAlpha * 1.5);
+                    
+                    // Couleur finale : mélange couleur de base + blanc pendant l'orage (éclairs)
+                    vec3 finalColor = mix(uColor, vec3(1.0), uStorm * 0.5);
+                    
+                    gl_FragColor = vec4(finalColor, tex.a * vAlpha);
                 }
             `,
-            transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending // Mélange additif pour l'effet lumineux
         });
-        scene.add(new THREE.Points(geo, mat));
 
-        // EFFET CONNEXIONS (Lightning)
-        function updateConnections() {
-            if(mat.uniforms.uEffect.value < 0.5 || mat.uniforms.uEffect.value > 1.5) {
-                lineMat.opacity = 0;
-                return;
-            }
+        const particles = new THREE.Points(geometry, material);
+        scene.add(particles);
 
-            const positions = geo.attributes.position.array;
-            const linePos = lineGeo.attributes.position.array;
-            let lineIndex = 0;
+        // --- 5. GÉNÉRATEURS DE FORMES (Maths) ---
+        function calculateShape(mode) {
+            const tArray = geometry.attributes.target.array;
+            
+            for(let i=0; i<particleCount; i++) {
+                let x, y, z;
+                // Index normalisé (0 à 1)
+                const u = i / particleCount; 
 
-            // Créer des connexions aléatoires entre particules proches
-            for(let i=0; i<particleCount && lineIndex < 5000; i+=isMobile ? 100 : 50) {
-                const x1 = positions[i*3];
-                const y1 = positions[i*3+1];
-                const z1 = positions[i*3+2];
-
-                // Chercher une particule proche
-                for(let j=i+1; j<particleCount && lineIndex < 5000; j+=isMobile ? 120 : 60) {
-                    const x2 = positions[j*3];
-                    const y2 = positions[j*3+1];
-                    const z2 = positions[j*3+2];
-
-                    const dist = Math.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2);
-
-                    if(dist < (isMobile ? 25 : 30) && Math.random() > 0.7) {
-                        linePos[lineIndex++] = x1;
-                        linePos[lineIndex++] = y1;
-                        linePos[lineIndex++] = z1;
-                        linePos[lineIndex++] = x2;
-                        linePos[lineIndex++] = y2;
-                        linePos[lineIndex++] = z2;
+                if (mode === 'cloud') {
+                    x = (Math.random()-0.5)*200;
+                    y = (Math.random()-0.5)*100;
+                    z = (Math.random()-0.5)*100;
+                }
+                else if (mode === 'chaos') {
+                    // Sphère éclatée
+                    const r = 100 * Math.random();
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    x = r * Math.sin(phi) * Math.cos(theta);
+                    y = r * Math.sin(phi) * Math.sin(theta);
+                    z = r * Math.cos(phi);
+                }
+                else if (mode === 'wave') {
+                    // Nappe ondulante
+                    x = (u - 0.5) * 200;
+                    z = (Math.random() - 0.5) * 80;
+                    y = Math.sin(x * 0.05) * 20 + Math.cos(z * 0.1) * 10;
+                }
+                else if (mode === 'network') {
+                    // Simulation de connexions (Lignes qui partent d'un centre)
+                    // On crée plusieurs "noeuds"
+                    const branches = 10;
+                    const branch = Math.floor(u * branches);
+                    const t = (u * branches) - branch; // 0 à 1 le long de la branche
+                    const angle = (branch / branches) * Math.PI * 2;
+                    const r = t * 80;
+                    // Spirale légère
+                    x = Math.cos(angle + t) * r;
+                    y = (Math.random()-0.5) * 10 + t * 20;
+                    z = Math.sin(angle + t) * r;
+                }
+                else if (mode === 'crystal') {
+                    // Octaèdre (Diamant)
+                    const size = 40;
+                    x = (Math.random()-0.5)*size*2;
+                    y = (Math.random()-0.5)*size*2;
+                    z = (Math.random()-0.5)*size*2;
+                    // On projette sur les faces
+                    if(Math.abs(x)+Math.abs(y)+Math.abs(z) > size) {
+                        const s = size / (Math.abs(x)+Math.abs(y)+Math.abs(z));
+                        x*=s; y*=s; z*=s;
                     }
                 }
-            }
-
-            lineGeo.attributes.position.needsUpdate = true;
-            lineGeo.setDrawRange(0, lineIndex / 3);
-            lineMat.opacity = mat.uniforms.uEffectIntensity.value * 0.4;
-        }
-
-        // GESTION CHAPITRES
-        const effectMap = { floating: 0, lightning: 1, helix: 2, shatter: 3, spiral: 4 };
-        let currentShape = 'chaos';
-        let connectionInterval;
-
-        function setShape(shapeName, colorHex, effectName) {
-            if(shapeName === currentShape) return;
-            currentShape = shapeName;
-
-            const targets = geo.attributes.target.array;
-            for(let i=0; i<particleCount; i++) {
-                const p = Shapes[shapeName](i);
-                targets[i*3] = p.x; targets[i*3+1] = p.y; targets[i*3+2] = p.z;
-            }
-            geo.attributes.target.needsUpdate = true;
-
-            gsap.to(mat.uniforms.uColor.value, {
-                r: new THREE.Color(colorHex).r,
-                g: new THREE.Color(colorHex).g,
-                b: new THREE.Color(colorHex).b,
-                duration: 2.5, ease: "power2.inOut"
-            });
-
-            // Activation effet
-            mat.uniforms.uEffect.value = effectMap[effectName] || 0;
-            gsap.to(mat.uniforms.uEffectIntensity, {
-                value: 1.0, duration: 2, ease: "power2.out"
-            });
-
-            // Connexions pour lightning
-            clearInterval(connectionInterval);
-            if(effectName === 'lightning') {
-                connectionInterval = setInterval(updateConnections, isMobile ? 150 : 100);
-            }
-        }
-
-        // SCROLL TRIGGERS
-        document.querySelectorAll('.chapter').forEach((chapter, idx) => {
-            const shape = chapter.dataset.shape;
-            const color = parseInt(chapter.dataset.color);
-            const effect = chapter.dataset.effect;
-
-            ScrollTrigger.create({
-                trigger: chapter,
-                start: 'top 55%',
-                end: 'bottom 45%',
-                onEnter: () => {
-                    setShape(shape, color, effect);
-                    chapter.classList.add('visible');
-                },
-                onEnterBack: () => {
-                    setShape(shape, color, effect);
-                    chapter.classList.add('visible');
-                },
-                onLeave: () => {
-                    chapter.classList.remove('visible');
-                    gsap.to(mat.uniforms.uEffectIntensity, {value: 0, duration: 1});
-                },
-                onLeaveBack: () => {
-                    chapter.classList.remove('visible');
-                    gsap.to(mat.uniforms.uEffectIntensity, {value: 0, duration: 1});
+                else if (mode === 'galaxy') {
+                    // Spirale
+                    const angle = u * Math.PI * 10; // 5 tours
+                    const r = u * 100;
+                    x = Math.cos(angle) * r;
+                    z = Math.sin(angle) * r;
+                    y = (Math.random()-0.5) * (20 - u*10); // Plus plat au bord
                 }
+
+                tArray[i*3] = x;
+                tArray[i*3+1] = y;
+                tArray[i*3+2] = z;
+            }
+            geometry.attributes.target.needsUpdate = true;
+        }
+
+        // --- 6. NAVIGATION & TRANSITIONS ---
+        function nextStep() {
+            currentStep++;
+            if (currentStep >= story.length) currentStep = 0; // Boucle
+
+            const data = story[currentStep];
+
+            // 1. Mise à jour Barre Progression
+            document.getElementById('progress-bar').style.width = ((currentStep+1) / story.length * 100) + "%";
+
+            // 2. Calculer la nouvelle forme
+            calculateShape(data.mode);
+
+            // 3. Animation des valeurs (Couleur, Orage)
+            gsap.to(material.uniforms.uColor.value, {
+                r: data.color.r, g: data.color.g, b: data.color.b,
+                duration: 2
+            });
+            gsap.to(material.uniforms.uStorm, {
+                value: data.storm,
+                duration: 1
             });
 
-            gsap.to(camera.position, {
-                z: (isMobile ? 200 : 160) - idx * (isMobile ? 20 : 28),
-                y: Math.sin(idx * 0.8) * (isMobile ? 12 : 18),
-                scrollTrigger: { trigger: chapter, start: 'top bottom', end: 'bottom top', scrub: 1.5 }
-            });
+            // 4. Animation UI (Texte)
+            const tag = document.getElementById('ui-chapter');
+            const txt = document.getElementById('ui-text');
+            
+            // Fade out
+            tag.classList.remove('active');
+            txt.classList.remove('active');
 
-            gsap.to(camera.rotation, {
-                z: (idx % 2 === 0 ? 0.06 : -0.06),
-                scrollTrigger: { trigger: chapter, start: 'top center', end: 'bottom center', scrub: 2 }
-            });
-        });
+            setTimeout(() => {
+                tag.innerText = data.chapter;
+                txt.innerHTML = data.text;
+                // Fade in
+                tag.classList.add('active');
+                txt.classList.add('active');
+            }, 800);
+        }
 
-        ScrollTrigger.create({
-            trigger: '#story',
-            start: 'top top',
-            end: 'bottom bottom',
-            onUpdate: (self) => {
-                document.getElementById('progress-bar').style.width = (self.progress * 100) + '%';
+        // Démarrage au clic
+        const intro = document.getElementById('intro');
+        // On écoute le clic sur TOUT le document pour avancer
+        document.body.addEventListener('click', (e) => {
+            // Si c'est l'intro
+            if (intro.style.opacity !== '0') {
+                intro.style.opacity = '0';
+                setTimeout(() => intro.style.display = 'none', 1500);
+                nextStep(); // Lancer le premier chapitre
+            } else {
+                // Sinon passer à la suite
+                nextStep();
             }
         });
 
-        // ANIMATION LOOP
+        // --- 7. BOUCLE D'ANIMATION OPTIMISÉE ---
         const clock = new THREE.Clock();
-
+        
         function animate() {
             requestAnimationFrame(animate);
-
             const dt = clock.getDelta();
-            mat.uniforms.uTime.value = clock.getElapsedTime();
+            const time = clock.getElapsedTime();
 
-            const posAttr = geo.attributes.position;
-            const targetAttr = geo.attributes.target;
-            const speed = (isMobile ? 1.6 : 2.2) * dt;
+            material.uniforms.uTime.value = time;
+
+            // MORPHING (Interpolation des positions)
+            // On déplace les points vers leur cible progressivement
+            const posAttr = geometry.attributes.position;
+            const targetAttr = geometry.attributes.target;
+            const speed = 2.5 * dt; // Vitesse de transition
 
             for(let i=0; i<particleCount; i++) {
                 const ix = i*3;
+                const iy = ix+1;
+                const iz = ix+2;
+                
                 posAttr.array[ix] += (targetAttr.array[ix] - posAttr.array[ix]) * speed;
-                posAttr.array[ix+1] += (targetAttr.array[ix+1] - posAttr.array[ix+1]) * speed;
-                posAttr.array[ix+2] += (targetAttr.array[ix+2] - posAttr.array[ix+2]) * speed;
+                posAttr.array[iy] += (targetAttr.array[iy] - posAttr.array[iy]) * speed;
+                posAttr.array[iz] += (targetAttr.array[iz] - posAttr.array[iz]) * speed;
             }
             posAttr.needsUpdate = true;
 
-            composer.render();
+            // Rotation caméra lente (Cinématique)
+            const camSpeed = (story[currentStep] && story[currentStep].storm > 0.1) ? 0.3 : 0.05; // Plus vite si orage
+            
+            camera.position.x = Math.sin(time * camSpeed) * 20;
+            camera.position.y = Math.cos(time * camSpeed * 0.5) * 10;
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
         }
 
-        document.getElementById('btn-start').addEventListener('click', () => {
-            gsap.to('#intro', { opacity: 0, duration: 1.2, ease: "power2.inOut", 
-                onComplete: () => document.getElementById('intro').style.display='none'
-            });
-            gsap.to('#scroll-hint', { opacity: 1, delay: 1.5, duration: 1.5 });
-            animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            material.uniforms.uRatio.value = renderer.getPixelRatio();
+            adjustCamera();
         });
 
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                camera.aspect = window.innerWidth/window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                composer.setSize(window.innerWidth, window.innerHeight);
-                mat.uniforms.uRatio.value = renderer.getPixelRatio();
-            }, 150);
-        });
+        animate();
 
     </script>
 </body>
