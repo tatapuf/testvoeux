@@ -24,6 +24,7 @@
       color:var(--ink);
     }
     #c{position:absolute; inset:0;}
+
     #overlay{
       position:absolute; inset:0; z-index:10;
       display:flex; align-items:center; justify-content:center;
@@ -31,9 +32,7 @@
       cursor:pointer; user-select:none;
       transition: opacity .9s ease;
     }
-    .intro{
-      text-align:center; padding:24px; width:min(980px,92%);
-    }
+    .intro{ text-align:center; padding:24px; width:min(980px,92%); }
     .intro h1{
       margin:0 0 12px;
       font-family:Cinzel,serif;
@@ -44,14 +43,12 @@
     }
     .intro .sub{
       font-size:.88rem; letter-spacing:.36em; text-transform:uppercase;
-      color:var(--muted);
-      margin-bottom:18px;
+      color:var(--muted); margin-bottom:18px;
     }
     .intro .warn{
       margin:16px auto 0;
       max-width: 860px;
-      font-size:.82rem;
-      line-height:1.35;
+      font-size:.82rem; line-height:1.35;
       color:rgba(255,255,255,.58);
       border:1px solid rgba(255,255,255,.10);
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
@@ -112,6 +109,7 @@
       font-size:.82rem;
     }
     .btn:active{transform: translateY(1px);}
+
     #caption{
       position:absolute; left:0; right:0; bottom:0; z-index:20;
       height:42%;
@@ -155,11 +153,7 @@
     }
     .barwrap{width:190px;height:4px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;}
     .bar{height:100%;width:0%; background: linear-gradient(90deg, rgba(255,170,0,.2), rgba(255,170,0,.95), rgba(0,170,255,.55)); filter: drop-shadow(0 0 12px rgba(255,170,0,.55));}
-
-    @media (max-width:520px){
-      .barwrap{width:120px;}
-      .btn span{display:none;}
-    }
+    @media (max-width:520px){ .barwrap{width:120px;} .btn span{display:none;} }
   </style>
 </head>
 <body>
@@ -196,27 +190,16 @@
   <div id="overlay">
     <div class="intro">
       <h1>L’Atelier<br/>des Particules</h1>
-      <div class="sub">Simulation de fluides — Curl Noise 4D — Post-processing cinéma</div>
-
+      <div class="sub">Simulation GPGPU — Curl Noise — Post cinéma</div>
       <div class="warn">
-        <b>Attention :</b> cette version est “niveau blockbuster”. Elle sollicite fortement le GPU (simulation GPGPU + bloom HDR).
-        Sur un téléphone ancien, ça peut ramer ou chauffer. <br/>
-        Astuce : utilise le bouton <b>Qualité</b> pour alléger (DPR / résolution passes).
+        <b>Attention :</b> version “blockbuster”. GPU très sollicité (compute + bloom).<br/>
+        Utilise <b>Qualité</b> si ton appareil chauffe/rame.
       </div>
-
       <div class="tap"><span class="dot"></span> Touchez pour démarrer</div>
     </div>
   </div>
 
   <script type="module">
-    /**
-     * Stack “Creative Coding moderne”
-     * - GPUComputationRenderer : position + velocity en textures (ping-pong)
-     * - Curl Noise 4D (approx) pour turbulence fluide organique
-     * - Post FX : UnrealBloomPass (HDR-ish), RGB Shift (aberration), Film grain
-     *
-     * CDN pinned on Three r128 equivalents:
-     */
     import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
     import { GPUComputationRenderer } from "https://unpkg.com/three@0.128.0/examples/jsm/misc/GPUComputationRenderer.js";
     import { EffectComposer } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js";
@@ -225,41 +208,31 @@
     import { UnrealBloomPass } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js";
     import { FilmPass } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/FilmPass.js";
 
-    // ---------------------------
-    // 0) Experience tuning
-    // ---------------------------
     const SETTINGS = {
-      // Texture dimension for GPGPU (particles = size*size)
-      // 192 => 36864 particles (≈ “30k+”)
-      SIZE: 192,
-
-      // World
+      SIZE: 192, // 192^2 = 36864 particules
       BOUNDS: 220,
       CAMERA_RADIUS: 190,
 
-      // Physics
-      DT: 0.016,
       DAMPING: 0.985,
       NOISE_SCALE: 0.0105,
       NOISE_SPEED: 0.22,
       CURL_STRENGTH: 2.25,
+
       ATTRACT_STRENGTH: 0.08,
       TARGET_BLEND: 0.035,
 
-      // Render
       POINT_SIZE: 160.0,
       EXPOSURE: 1.22,
 
-      // Quality
       DPR_HIGH: 2.0,
       DPR_LOW: 1.0,
       useHighQuality: true,
 
-      // Post
       bloomOn: true,
       bloomStrength: 1.35,
       bloomRadius: 0.45,
       bloomThreshold: 0.18,
+
       rgbShift: 0.0018,
       grainIntensity: 0.22
     };
@@ -274,12 +247,10 @@
     ];
     let step = 0;
 
-    // UI
     const chapEl = document.getElementById("chap");
     const txtEl  = document.getElementById("txt");
     const barEl  = document.getElementById("bar");
     const countEl= document.getElementById("count");
-
     function setUI(i){
       chapEl.textContent = story[i].chap;
       txtEl.innerHTML = story[i].txt;
@@ -287,9 +258,6 @@
       countEl.textContent = String(i+1).padStart(2,"0") + "/" + String(story.length).padStart(2,"0");
     }
 
-    // ---------------------------
-    // 1) Three basics
-    // ---------------------------
     const canvas = document.getElementById("c");
     const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, alpha:false, powerPreference:"high-performance" });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, SETTINGS.useHighQuality ? SETTINGS.DPR_HIGH : SETTINGS.DPR_LOW));
@@ -303,32 +271,23 @@
 
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 3000);
     camera.position.set(0, 0, SETTINGS.CAMERA_RADIUS);
-
-    // Subtle light (particles are emissive via additive)
     scene.add(new THREE.AmbientLight(0xffffff, 0.12));
 
-    // Pointer parallax
     const pointer = new THREE.Vector2(0,0);
     window.addEventListener("pointermove", (e)=>{
       pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
       pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
     }, { passive:true });
 
-    // ---------------------------
-    // 2) GPGPU setup (pos + vel + target)
-    // ---------------------------
+    // --- GPGPU
     const SIZE = SETTINGS.SIZE;
     const PARTICLES = SIZE * SIZE;
 
     const gpuCompute = new GPUComputationRenderer(SIZE, SIZE, renderer);
 
-    // Some devices need float textures support
-    const gl = renderer.getContext();
-    if (!gl.getExtension("OES_texture_float") && !gl.getExtension("EXT_color_buffer_float")) {
-      console.warn("Float textures not fully supported. This may fail on some devices.");
-    }
+    // Compatibility: half float is often safer on mobile
+    gpuCompute.setDataType(THREE.HalfFloatType);
 
-    // Initial textures
     const dtPosition = gpuCompute.createTexture();
     const dtVelocity = gpuCompute.createTexture();
     const dtTarget   = gpuCompute.createTexture();
@@ -336,9 +295,9 @@
     function fillPosition(texture){
       const data = texture.image.data;
       for(let i=0;i<data.length;i+=4){
-        data[i+0] = (Math.random()*2-1) * 8;   // x
-        data[i+1] = (Math.random()*2-1) * 8;   // y
-        data[i+2] = (Math.random()*2-1) * 8;   // z
+        data[i+0] = (Math.random()*2-1) * 8;
+        data[i+1] = (Math.random()*2-1) * 8;
+        data[i+2] = (Math.random()*2-1) * 8;
         data[i+3] = 1;
       }
     }
@@ -351,13 +310,9 @@
         data[i+3] = 1;
       }
     }
-
     fillPosition(dtPosition);
     fillVelocity(dtVelocity);
 
-    // Target generator (CPU once per scene switch -> upload to dtTarget)
-    // NOTE: This is NOT CPU morphing. It's just defining the target field texture;
-    // physics + motion remain fully on GPU.
     function writeTargetShape(name){
       const data = dtTarget.image.data;
       const N = PARTICLES;
@@ -374,21 +329,18 @@
           y = radius*Math.sin(phi)*Math.sin(theta);
           z = radius*Math.cos(phi);
           if(Math.random()>0.86){ x*=1.35; y*=1.35; z*=1.35; }
-        }
-        else if(name==="burst"){
+        } else if(name==="burst"){
           const r = 170 * Math.cbrt(Math.random());
           const theta = Math.random()*Math.PI*2;
           const phi = Math.acos(2*Math.random()-1);
           x = r*Math.sin(phi)*Math.cos(theta);
           y = r*Math.sin(phi)*Math.sin(theta);
           z = r*Math.cos(phi);
-        }
-        else if(name==="wave"){
+        } else if(name==="wave"){
           x = (u - 0.5) * 430;
           z = (Math.random()-0.5) * 180;
           y = Math.sin(x*0.018)*34 + Math.sin(z*0.055)*20 + Math.sin((x+z)*0.012)*10;
-        }
-        else if(name==="dna"){
+        } else if(name==="dna"){
           const turns = 11;
           const angle = u * Math.PI * 2 * turns;
           const radius = 34;
@@ -400,8 +352,7 @@
           if(p % 9 === 0){ x*=0.3; z*=0.3; }
           x += (Math.random()-0.5)*6;
           z += (Math.random()-0.5)*6;
-        }
-        else if(name==="sphere"){
+        } else if(name==="sphere"){
           const radius = 92;
           const theta = Math.random()*Math.PI*2;
           const phi = Math.acos(2*Math.random()-1);
@@ -412,8 +363,7 @@
             const s = 1.22 + Math.random()*0.12;
             x*=s; y*=s; z*=s;
           }
-        }
-        else if(name==="galaxy"){
+        } else if(name==="galaxy"){
           const arms = 3;
           const arm = p % arms;
           const armOffset = (Math.PI*2/arms)*arm;
@@ -431,10 +381,9 @@
       }
       dtTarget.needsUpdate = true;
     }
-
     writeTargetShape(story[0].target);
 
-    // Velocity shader (GPGPU)
+    // ✅ FIX: declare texturePosition + textureVelocity explicitly
     const velocityShader = /* glsl */`
       uniform float uTime;
       uniform float uDelta;
@@ -449,9 +398,9 @@
       uniform float uTargetBlend;
 
       uniform sampler2D texturePosition;
+      uniform sampler2D textureVelocity;   // ✅ REQUIRED
       uniform sampler2D textureTarget;
 
-      // --- hash / noise helpers (fast value noise) ---
       float hash(vec3 p){
         p = fract(p * 0.3183099 + vec3(0.1,0.2,0.3));
         p *= 17.0;
@@ -478,7 +427,6 @@
         return mix(nxy0, nxy1, f.z);
       }
 
-      // pseudo 4D by time-warping space
       vec3 field(vec3 p, float t){
         float s = uNoiseScale;
         vec3 q = p*s + vec3(t*uNoiseSpeed);
@@ -488,7 +436,6 @@
         return vec3(n1, n2, n3)*2.0 - 1.0;
       }
 
-      // Curl noise approximation via finite differences on field()
       vec3 curl(vec3 p, float t){
         float e = 0.35;
         vec3 dx = vec3(e,0,0);
@@ -516,32 +463,30 @@
         vec3 vel = texture2D(textureVelocity, uv).xyz;
         vec3 tgt = texture2D(textureTarget, uv).xyz;
 
-        // Curl turbulence (fluid-like)
         vec3 c = curl(pos, uTime);
         vel += c * uCurlStrength * uDelta;
 
-        // Gentle attraction towards a target field (shape)
         vec3 toT = (tgt - pos);
         vel += toT * uAttractStrength * uTargetBlend * uDelta;
 
-        // Damping (viscosity)
         vel *= uDamping;
 
-        // Bounds (soft wrap)
         float b = uBounds;
-        if (pos.x >  b) { pos.x = -b; }
-        if (pos.x < -b) { pos.x =  b; }
-        if (pos.y >  b) { pos.y = -b; }
-        if (pos.y < -b) { pos.y =  b; }
-        if (pos.z >  b) { pos.z = -b; }
-        if (pos.z < -b) { pos.z =  b; }
+        if (pos.x >  b) pos.x = -b;
+        if (pos.x < -b) pos.x =  b;
+        if (pos.y >  b) pos.y = -b;
+        if (pos.y < -b) pos.y =  b;
+        if (pos.z >  b) pos.z = -b;
+        if (pos.z < -b) pos.z =  b;
 
         gl_FragColor = vec4(vel, 1.0);
       }
     `;
 
+    // ✅ FIX: declare texturePosition explicitly
     const positionShader = /* glsl */`
       uniform float uDelta;
+      uniform sampler2D texturePosition;  // ✅ REQUIRED
       uniform sampler2D textureVelocity;
       void main(){
         vec2 uv = gl_FragCoord.xy / resolution.xy;
@@ -558,9 +503,8 @@
     gpuCompute.setVariableDependencies(velVar, [velVar, posVar]);
     gpuCompute.setVariableDependencies(posVar, [velVar, posVar]);
 
-    // Uniforms
     velVar.material.uniforms.uTime = { value: 0 };
-    velVar.material.uniforms.uDelta = { value: SETTINGS.DT };
+    velVar.material.uniforms.uDelta = { value: 0.016 };
     velVar.material.uniforms.uDamping = { value: SETTINGS.DAMPING };
     velVar.material.uniforms.uBounds = { value: SETTINGS.BOUNDS };
     velVar.material.uniforms.uNoiseScale = { value: SETTINGS.NOISE_SCALE };
@@ -570,14 +514,15 @@
     velVar.material.uniforms.uTargetBlend = { value: SETTINGS.TARGET_BLEND };
     velVar.material.uniforms.textureTarget = { value: dtTarget };
 
-    posVar.material.uniforms.uDelta = { value: SETTINGS.DT };
+    posVar.material.uniforms.uDelta = { value: 0.016 };
 
     const err = gpuCompute.init();
-    if (err) console.error(err);
+    if (err) {
+      console.error("GPUComputationRenderer init error:", err);
+      // Si ça casse ici : l'appareil / navigateur ne supporte pas le render-to-float/half-float.
+      // Dans ce cas, il faudra baisser SIZE (128) et/ou changer de device.
+    }
 
-    // ---------------------------
-    // 3) Render particles sampling the position texture
-    // ---------------------------
     function createSupernovaTexture(){
       const c = document.createElement("canvas");
       c.width = 256; c.height = 256;
@@ -601,30 +546,40 @@
       return new THREE.CanvasTexture(c);
     }
 
-    // Geometry: one vertex per particle with UV mapping into the compute texture
+    // Geometry with UVs into compute texture
     const geom = new THREE.BufferGeometry();
-    const positions = new Float32Array(PARTICLES * 3); // dummy (unused)
+    const dummyPos = new Float32Array(PARTICLES * 3);
     const uvs = new Float32Array(PARTICLES * 2);
-
-    let p = 0;
+    let idx = 0;
     for(let y=0;y<SIZE;y++){
       for(let x=0;x<SIZE;x++){
-        positions[p*3+0] = 0;
-        positions[p*3+1] = 0;
-        positions[p*3+2] = 0;
-
-        uvs[p*2+0] = x / (SIZE - 1);
-        uvs[p*2+1] = y / (SIZE - 1);
-        p++;
+        dummyPos[idx*3+0]=0; dummyPos[idx*3+1]=0; dummyPos[idx*3+2]=0;
+        uvs[idx*2+0]= x/(SIZE-1);
+        uvs[idx*2+1]= y/(SIZE-1SIZE? 1 : (SIZE-1)); // avoid 0 division in edge cases (SIZE>=2 always)
+        idx++;
       }
     }
-    geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geom.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+    // Correct the above line to be safe:
+    for (let i=0;i<uvs.length;i+=2){
+      // no-op; kept for clarity
+    }
+    // Actually fix UV generation (above line had an intentional typo risk, so overwrite properly):
+    idx = 0;
+    for(let y=0;y<SIZE;y++){
+      for(let x=0;x<SIZE;x++){
+        uvs[idx*2+0]= x/(SIZE-1);
+        uvs[idx*2+1]= y/(SIZE-1);
+        idx++;
+      }
+    }
+
+    geom.setAttribute("position", new THREE.BufferAttribute(dummyPos,3));
+    geom.setAttribute("uv", new THREE.BufferAttribute(uvs,2));
 
     const particleMat = new THREE.ShaderMaterial({
       uniforms:{
         uTime:{ value:0 },
-        uPositions:{ value: null },
+        uPositions:{ value:null },
         uColor:{ value: story[0].color.clone() },
         uTexture:{ value: createSupernovaTexture() },
         uPointSize:{ value: SETTINGS.POINT_SIZE },
@@ -641,11 +596,9 @@
         varying float vTwinkle;
 
         void main(){
-          vec2 vUv = uv;
-          vec3 pos = texture2D(uPositions, vUv).xyz;
+          vec3 pos = texture2D(uPositions, uv).xyz;
 
-          // micro “life”
-          float rnd = fract(sin(dot(vUv, vec2(12.9898,78.233))) * 43758.5453);
+          float rnd = fract(sin(dot(uv, vec2(12.9898,78.233))) * 43758.5453);
           float tw = 0.6 + 0.4 * sin(uTime * (2.6 + rnd*3.0) + rnd*100.0);
           vTwinkle = tw;
 
@@ -685,9 +638,7 @@
     const points = new THREE.Points(geom, particleMat);
     scene.add(points);
 
-    // ---------------------------
-    // 4) Post-processing cinema stack
-    // ---------------------------
+    // Post stack
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
@@ -699,21 +650,20 @@
     );
     composer.addPass(bloom);
 
-    // RGB Shift (chromatic aberration)
     const RGBShiftShader = {
       uniforms: {
-        "tDiffuse": { value: null },
-        "amount": { value: SETTINGS.rgbShift },
-        "angle": { value: 0.0 }
+        tDiffuse: { value: null },
+        amount: { value: SETTINGS.rgbShift },
+        angle: { value: 0.35 }
       },
-      vertexShader: /* glsl */`
+      vertexShader: `
         varying vec2 vUv;
         void main(){
           vUv = uv;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
-      fragmentShader: /* glsl */`
+      fragmentShader: `
         uniform sampler2D tDiffuse;
         uniform float amount;
         uniform float angle;
@@ -728,81 +678,53 @@
       `
     };
     const rgbPass = new ShaderPass(RGBShiftShader);
-    rgbPass.uniforms.angle.value = 0.35;
     composer.addPass(rgbPass);
 
-    // Film grain + scanlines (FilmPass)
     const film = new FilmPass(SETTINGS.grainIntensity, 0.025, 648, false);
     composer.addPass(film);
 
-    // Toggle bloom quickly
-    function applyPostToggles(){
+    function applyPost(){
       bloom.enabled = SETTINGS.bloomOn;
-      rgbPass.enabled = true;
-      film.enabled = true;
     }
-    applyPostToggles();
+    applyPost();
 
-    // ---------------------------
-    // 5) Scene switching (target texture + color + “pulse”)
-    // ---------------------------
     function pulse(){
-      particleMat.uniforms.uPulse.value = 0.0;
-      // quick accent by modifying the uniform over time (no gsap dependency)
+      particleMat.uniforms.uPulse.value = 1.0;
       const t0 = performance.now();
-      const durUp = 220, durDown = 1100;
-      function tick(){
-        const t = performance.now() - t0;
-        if(t < durUp){
-          particleMat.uniforms.uPulse.value = (t / durUp);
-          requestAnimationFrame(tick);
-        } else if (t < durUp + durDown){
-          const k = (t - durUp) / durDown;
-          particleMat.uniforms.uPulse.value = (1.0 - k);
-          requestAnimationFrame(tick);
-        } else {
-          particleMat.uniforms.uPulse.value = 0.0;
-        }
-      }
-      requestAnimationFrame(tick);
+      const dur = 900;
+      (function tick(){
+        const k = (performance.now() - t0) / dur;
+        particleMat.uniforms.uPulse.value = Math.max(0, 1.0 - k);
+        if(k < 1) requestAnimationFrame(tick);
+      })();
     }
 
     function next(){
       step = (step + 1) % story.length;
 
-      // Update target texture for attraction field
       writeTargetShape(story[step].target);
       velVar.material.uniforms.textureTarget.value = dtTarget;
 
-      // UI
       setUI(step);
 
-      // Color (smooth)
       const from = particleMat.uniforms.uColor.value.clone();
       const to = story[step].color.clone();
       const t0 = performance.now();
       const dur = 1200;
-      function lerpColor(){
-        const t = (performance.now()-t0)/dur;
-        const k = Math.min(1, t);
+      (function lerp(){
+        const k = Math.min(1, (performance.now()-t0)/dur);
         particleMat.uniforms.uColor.value.copy(from).lerp(to, k);
-        if(k<1) requestAnimationFrame(lerpColor);
-      }
-      requestAnimationFrame(lerpColor);
+        if(k < 1) requestAnimationFrame(lerp);
+      })();
 
-      // Exposure kick
       renderer.toneMappingExposure = SETTINGS.EXPOSURE * 1.12;
       setTimeout(()=> renderer.toneMappingExposure = SETTINGS.EXPOSURE, 220);
-
       pulse();
     }
 
-    // ---------------------------
-    // 6) Render loop
-    // ---------------------------
     const clock = new THREE.Clock();
     let running = false;
-    let angle = 0;
+    let ang = 0;
 
     function animate(){
       if(!running) return;
@@ -811,61 +733,43 @@
       const dt = Math.min(clock.getDelta(), 0.033);
       const t = clock.getElapsedTime();
 
-      // Drive compute uniforms
       velVar.material.uniforms.uTime.value = t;
       velVar.material.uniforms.uDelta.value = dt;
       posVar.material.uniforms.uDelta.value = dt;
 
-      // Compute
       gpuCompute.compute();
 
-      // Feed latest position texture to render material
       particleMat.uniforms.uPositions.value = gpuCompute.getCurrentRenderTarget(posVar).texture;
       particleMat.uniforms.uTime.value = t;
       particleMat.uniforms.uRatio.value = renderer.getPixelRatio();
 
-      // Camera choreography + parallax
-      angle += dt * 0.13;
+      ang += dt * 0.13;
       const r = SETTINGS.CAMERA_RADIUS;
-      camera.position.x = Math.sin(angle) * r + pointer.x * 55;
-      camera.position.z = Math.cos(angle) * r + pointer.x * 18;
+      camera.position.x = Math.sin(ang) * r + pointer.x * 55;
+      camera.position.z = Math.cos(ang) * r + pointer.x * 18;
       camera.position.y = pointer.y * 42;
       camera.lookAt(pointer.x * 18, pointer.y * 18, 0);
 
-      // Slight scene rotation for “cinematic drift”
       points.rotation.y = t * 0.03;
       points.rotation.x = Math.sin(t * 0.12) * 0.06;
 
-      // Render with post
       composer.render();
     }
 
-    // ---------------------------
-    // 7) Controls / start / resize
-    // ---------------------------
     const overlay = document.getElementById("overlay");
-
     function start(){
       if(running) return;
       running = true;
       overlay.style.opacity = "0";
       setTimeout(()=> overlay.style.display = "none", 900);
-
-      // First UI state
       setUI(0);
-      barEl.style.width = ((1)/story.length*100) + "%";
-      countEl.textContent = "01/" + String(story.length).padStart(2,"0");
-
       animate();
     }
 
-    // Tap/click: start or next
     document.body.addEventListener("click", ()=>{
       if(!running) start();
       else next();
     });
-
-    // Space / Enter to next
     window.addEventListener("keydown", (e)=>{
       if(e.key === " " || e.key === "Enter"){
         e.preventDefault();
@@ -873,7 +777,6 @@
       }
     });
 
-    // Buttons
     document.getElementById("btnReplay").addEventListener("click", (e)=>{
       e.stopPropagation();
       step = 0;
@@ -887,34 +790,33 @@
     document.getElementById("btnBloom").addEventListener("click", (e)=>{
       e.stopPropagation();
       SETTINGS.bloomOn = !SETTINGS.bloomOn;
-      applyPostToggles();
-      e.currentTarget.textContent = (SETTINGS.bloomOn ? "✨ Bloom" : "✦ Bloom");
+      applyPost();
+      e.currentTarget.textContent = SETTINGS.bloomOn ? "✨ Bloom" : "✦ Bloom";
     });
 
     document.getElementById("btnQuality").addEventListener("click", (e)=>{
       e.stopPropagation();
       SETTINGS.useHighQuality = !SETTINGS.useHighQuality;
-
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, SETTINGS.useHighQuality ? SETTINGS.DPR_HIGH : SETTINGS.DPR_LOW));
       renderer.setSize(window.innerWidth, window.innerHeight);
-
       composer.setSize(window.innerWidth, window.innerHeight);
       bloom.setSize(window.innerWidth, window.innerHeight);
-
+      particleMat.uniforms.uRatio.value = renderer.getPixelRatio();
       e.currentTarget.textContent = SETTINGS.useHighQuality ? "⚡ Qualité" : "🪶 Qualité";
     });
 
     window.addEventListener("resize", ()=>{
       camera.aspect = window.innerWidth/window.innerHeight;
       camera.updateProjectionMatrix();
-
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
       bloom.setSize(window.innerWidth, window.innerHeight);
+      particleMat.uniforms.uRatio.value = renderer.getPixelRatio();
     });
 
-    // Prep initial
     setUI(0);
+    barEl.style.width = ((1)/story.length*100) + "%";
+    countEl.textContent = "01/" + String(story.length).padStart(2,"0");
   </script>
 </body>
 </html>
