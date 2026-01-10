@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>L'Atelier des Particules</title>
+    <title>L'Atelier des Particules - Édition Spectaculaire</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,500;1,700&family=Cinzel:wght@400;600&family=Montserrat:wght@200;300;400&display=swap');
 
@@ -13,31 +12,22 @@
         
         body { 
             margin: 0; overflow-x: hidden; overflow-y: scroll; 
-            background: #000; 
-            font-family: 'Montserrat', sans-serif;
-            -webkit-overflow-scrolling: touch;
-            -webkit-font-smoothing: antialiased;
+            background: #000; font-family: 'Montserrat', sans-serif;
+            -webkit-overflow-scrolling: touch; -webkit-font-smoothing: antialiased;
         }
 
-        #canvas-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1;
-        }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 1; }
+        #story { position: relative; z-index: 10; pointer-events: none; }
 
-        #story {
-            position: relative; z-index: 10; pointer-events: none;
-        }
-
-        /* CHAPITRES NARRATIFS ENRICHIS */
         .chapter {
             min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 60px 6vw 80px; text-align: center; pointer-events: none; position: relative;
+            padding: 60px 6vw 80px; text-align: center; pointer-events: none;
         }
 
         .chapter-overline {
-            font-family: 'Cinzel', serif; font-weight: 400; font-size: 0.65rem;
-            letter-spacing: 8px; color: rgba(255,255,255,0.3); text-transform: uppercase;
-            margin-bottom: 15px; opacity: 0; transform: translateY(20px);
-            transition: all 1.4s cubic-bezier(0.19, 1, 0.22, 1);
+            font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 8px;
+            color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 15px;
+            opacity: 0; transform: translateY(20px); transition: all 1.4s cubic-bezier(0.19, 1, 0.22, 1);
         }
 
         .chapter-number {
@@ -52,49 +42,40 @@
             font-size: clamp(2.2rem, 9vw, 4.5rem); color: white; line-height: 1.15;
             margin-bottom: 35px; opacity: 0; transform: translateY(40px);
             transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.2s;
-            text-shadow: 0 0 60px rgba(255,255,255,0.4);
-            letter-spacing: -0.02em;
+            text-shadow: 0 0 60px rgba(255,255,255,0.4); letter-spacing: -0.02em;
         }
 
         .chapter-subtitle {
             font-family: 'Cormorant Garamond', serif; font-weight: 400;
             font-size: clamp(1.1rem, 3.5vw, 1.5rem); color: rgba(255,255,255,0.7);
             margin-bottom: 30px; opacity: 0; transform: translateY(35px);
-            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.35s;
-            font-style: italic; max-width: 550px;
+            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.35s; font-style: italic; max-width: 550px;
         }
 
         .chapter-text {
             font-family: 'Montserrat', sans-serif; font-weight: 300; 
-            font-size: clamp(0.95rem, 2.8vw, 1.15rem);
-            color: rgba(255,255,255,0.75); max-width: 520px; line-height: 1.85;
-            opacity: 0; transform: translateY(30px);
-            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.5s;
-            letter-spacing: 0.015em;
+            font-size: clamp(0.95rem, 2.8vw, 1.15rem); color: rgba(255,255,255,0.75);
+            max-width: 520px; line-height: 1.85; opacity: 0; transform: translateY(30px);
+            transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.5s; letter-spacing: 0.015em;
         }
 
         .chapter-quote {
             font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400;
             font-size: clamp(1.15rem, 3.2vw, 1.6rem); color: rgba(255,255,255,0.85);
-            margin-top: 40px; max-width: 480px; line-height: 1.7;
-            opacity: 0; transform: translateY(25px);
+            margin-top: 40px; max-width: 480px; line-height: 1.7; opacity: 0; transform: translateY(25px);
             transition: all 1.7s cubic-bezier(0.19, 1, 0.22, 1) 0.65s;
             border-left: 2px solid rgba(255,215,0,0.5); padding-left: 20px;
         }
 
-        .chapter.visible .chapter-overline,
-        .chapter.visible .chapter-number,
-        .chapter.visible .chapter-title,
-        .chapter.visible .chapter-subtitle,
-        .chapter.visible .chapter-text,
-        .chapter.visible .chapter-quote {
+        .chapter.visible .chapter-overline, .chapter.visible .chapter-number,
+        .chapter.visible .chapter-title, .chapter.visible .chapter-subtitle,
+        .chapter.visible .chapter-text, .chapter.visible .chapter-quote {
             opacity: 1; transform: translateY(0);
         }
 
         .highlight { color: #ffd700; font-weight: 600; }
         .glow { text-shadow: 0 0 20px currentColor; }
 
-        /* INTRO CINÉMATIQUE */
         #intro {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 3000;
             background: radial-gradient(ellipse at center, #1a1520 0%, #000000 100%);
@@ -118,30 +99,25 @@
         #intro-tagline {
             font-family: 'Montserrat', sans-serif; font-weight: 300;
             font-size: clamp(0.9rem, 2.5vw, 1.1rem); color: rgba(255,255,255,0.6);
-            margin-bottom: 55px; text-align: center; max-width: 500px; padding: 0 30px;
-            line-height: 1.7;
+            margin-bottom: 55px; text-align: center; max-width: 500px; padding: 0 30px; line-height: 1.7;
         }
 
         #intro button {
             padding: 20px 55px; background: white; color: black; border: none; font-weight: 600;
             font-size: 1rem; letter-spacing: 4px; text-transform: uppercase; cursor: pointer;
             box-shadow: 0 0 50px rgba(255,255,255,0.7); transition: all 0.4s; border-radius: 50px;
-            pointer-events: all; -webkit-tap-highlight-color: transparent;
-            font-family: 'Montserrat', sans-serif;
+            pointer-events: all; -webkit-tap-highlight-color: transparent; font-family: 'Montserrat', sans-serif;
         }
 
         #intro button:active { transform: scale(0.96); box-shadow: 0 0 80px rgba(255,255,255,0.9); }
-
         #intro.hidden { opacity: 0; pointer-events: none; }
 
-        /* PROGRESS BAR */
         #progress-bar {
             position: fixed; top: 0; left: 0; width: 0%; height: 2px;
             background: linear-gradient(90deg, #ffd700, #ff6b6b, #4ecdc4);
             z-index: 5000; transition: width 0.1s ease-out;
         }
 
-        /* SCROLL HINT */
         #scroll-hint {
             position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%);
             color: rgba(255,255,255,0.5); font-size: 0.7rem; letter-spacing: 3px;
@@ -154,18 +130,15 @@
             50% { transform: translateX(-50%) translateY(-12px); opacity: 1; }
         }
 
-        /* FINALE ÉPIQUE */
         #finale {
             min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: linear-gradient(to bottom, #000 0%, #0d0020 50%, #1a0033 100%);
-            padding: 60px 20px;
+            background: linear-gradient(to bottom, #000 0%, #0d0020 50%, #1a0033 100%); padding: 60px 20px;
         }
 
         #finale h2 {
             font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 700;
             font-size: clamp(2.5rem, 9vw, 5rem); color: white; text-align: center;
-            text-shadow: 0 0 100px rgba(170,136,255,1); margin-bottom: 30px;
-            line-height: 1.2;
+            text-shadow: 0 0 100px rgba(170,136,255,1); margin-bottom: 30px; line-height: 1.2;
         }
 
         #finale p {
@@ -190,111 +163,72 @@
     </div>
 
     <div id="canvas-container"></div>
-
     <div id="scroll-hint" style="opacity: 0;">↓ Explorez l'Histoire ↓</div>
 
     <div id="story">
-        
-        <!-- PROLOGUE -->
-        <div class="chapter" data-shape="chaos" data-color="0x444444">
+        <div class="chapter" data-shape="chaos" data-color="0x444444" data-effect="floating">
             <div class="chapter-overline">Prologue</div>
             <div class="chapter-number">Le Vide Primordial</div>
             <div class="chapter-title">Au commencement<br>était le <span class="highlight glow">Chaos</span></div>
-            <div class="chapter-subtitle">
-                Avant la forme, avant le sens, avant même le temps...
-            </div>
+            <div class="chapter-subtitle">Avant la forme, avant le sens, avant même le temps...</div>
             <div class="chapter-text">
                 Dans l'obscurité infinie flottent des millions de particules égarées.
                 Elles dérivent sans but, attendant l'étincelle qui les éveillera.
-                C'est ici que naissent toutes les idées, dans ce bouillon de possibles.
             </div>
-            <div class="chapter-quote">
-                « Tout art commence dans le noir. »
-            </div>
+            <div class="chapter-quote">« Tout art commence dans le noir. »</div>
         </div>
 
-        <!-- CHAPITRE I -->
-        <div class="chapter" data-shape="brain" data-color="0xffcc00">
+        <div class="chapter" data-shape="brain" data-color="0xffcc00" data-effect="lightning">
             <div class="chapter-overline">Acte I</div>
             <div class="chapter-number">La Cognition</div>
-            <div class="chapter-title">L'éveil de la<br><span class="highlight glow">Conscience</span></div>
-            <div class="chapter-subtitle">
-                Le cerveau humain : 86 milliards de neurones qui tissent la réalité
-            </div>
+            <div class="chapter-title">L'<span class="highlight glow">Orage</span><br>Synaptique</div>
+            <div class="chapter-subtitle">86 milliards de neurones s'allument comme la foudre</div>
             <div class="chapter-text">
-                Une première connexion s'établit. Puis une autre. Et soudain, comme un orage électrique,
-                des milliers de synapses s'allument simultanément. Les particules se regroupent,
-                formant un nuage doré pulsant : la pensée prend naissance.
+                Une première connexion s'établit. Puis une autre. Et soudain, comme un <strong>orage électrique</strong>,
+                des milliers de synapses crépitent simultanément. Les particules se connectent par des arcs lumineux.
             </div>
-            <div class="chapter-quote">
-                « Je pense, donc je crée. »
-            </div>
+            <div class="chapter-quote">« Le cerveau est l'orage qui sculpte la réalité. »</div>
         </div>
 
-        <!-- CHAPITRE II -->
-        <div class="chapter" data-shape="dna" data-color="0x0099ff">
+        <div class="chapter" data-shape="dna" data-color="0x0099ff" data-effect="helix">
             <div class="chapter-overline">Acte II</div>
             <div class="chapter-number">L'Émotion</div>
             <div class="chapter-title">La danse<br>de l'<span class="highlight glow">Âme</span></div>
-            <div class="chapter-subtitle">
-                Quand la raison rencontre la passion
-            </div>
+            <div class="chapter-subtitle">Quand la raison rencontre la passion</div>
             <div class="chapter-text">
-                La créativité n'est pas statique. Elle pulse, se tord, respire comme un organisme vivant.
-                Telle une double hélice d'ADN, elle encode nos rêves les plus profonds,
-                nos peurs les plus intimes. C'est le cœur battant de l'artiste.
+                La créativité n'est pas statique. Elle <strong>pulse, se tord, respire</strong> comme un organisme vivant.
+                Les brins d'ADN s'enlacent dans une chorégraphie hypnotique, tissant nos rêves les plus profonds.
             </div>
-            <div class="chapter-quote">
-                « L'art sans émotion n'est que décoration. »
-            </div>
+            <div class="chapter-quote">« L'art sans émotion n'est que décoration. »</div>
         </div>
 
-        <!-- CHAPITRE III -->
-        <div class="chapter" data-shape="crystal" data-color="0xff3377">
+        <div class="chapter" data-shape="crystal" data-color="0xff3377" data-effect="shatter">
             <div class="chapter-overline">Acte III</div>
             <div class="chapter-number">La Forme</div>
-            <div class="chapter-title">La <span class="highlight glow">Cristallisation</span><br>du Rêve</div>
-            <div class="chapter-subtitle">
-                Quand le chaos devient géométrie parfaite
-            </div>
+            <div class="chapter-title">La <span class="highlight glow">Cristallisation</span></div>
+            <div class="chapter-subtitle">Quand le chaos devient géométrie parfaite</div>
             <div class="chapter-text">
-                Soudain, tout se fige. Les particules anarchiques trouvent leur place,
-                s'assemblent en structures d'une précision mathématique.
-                Le chaos devient diamant, l'idée devient œuvre. 
-                C'est le moment sacré où l'invisible devient tangible.
+                Soudain, tout se fige. Les particules anarchiques <strong>vibrent intensément</strong> puis trouvent leur place,
+                s'assemblant en structures cristallines. Le chaos devient diamant, l'idée devient œuvre tangible.
             </div>
-            <div class="chapter-quote">
-                « La perfection est atteinte non quand il n'y a plus rien à ajouter,<br>mais quand il n'y a plus rien à retirer. »
-            </div>
+            <div class="chapter-quote">« La perfection : quand il n'y a plus rien à retirer. »</div>
         </div>
 
-        <!-- CHAPITRE IV -->
-        <div class="chapter" data-shape="galaxy" data-color="0xaa77ff">
+        <div class="chapter" data-shape="galaxy" data-color="0xaa77ff" data-effect="spiral">
             <div class="chapter-overline">Acte IV</div>
             <div class="chapter-number">L'Univers</div>
             <div class="chapter-title">Vous êtes<br>le <span class="highlight glow">Créateur</span></div>
-            <div class="chapter-subtitle">
-                Chaque geste sculpte des galaxies entières
-            </div>
+            <div class="chapter-subtitle">Chaque geste sculpte des galaxies entières</div>
             <div class="chapter-text">
-                Regardez autour de vous. Ces particules ne sont pas des spectateurs passifs.
-                Elles répondent à votre présence, à votre énergie, à votre intention.
-                Vous n'êtes plus simple observateur : vous êtes le centre gravitationnel
-                de cet univers en expansion infinie.
+                Les particules <strong>spiralent en bras galactiques</strong>, répondant à votre présence.
+                Vous êtes le centre gravitationnel de cet univers en expansion infinie.
             </div>
-            <div class="chapter-quote">
-                « Nous sommes faits de poussière d'étoiles qui contemple les étoiles. »
-            </div>
+            <div class="chapter-quote">« Nous sommes poussière d'étoiles contemplant les étoiles. »</div>
         </div>
 
-        <!-- FINALE -->
         <div id="finale">
             <h2>L'Atelier n'a<br>pas de fin</h2>
-            <p>
-                Car chaque fin est un nouveau commencement.
-                Retournez explorer, créez votre propre histoire.
-                Les particules attendent votre prochain geste.
-            </p>
+            <p>Car chaque fin est un nouveau commencement. Les particules attendent votre prochain geste.</p>
         </div>
     </div>
 
@@ -311,152 +245,93 @@
     <script>
         gsap.registerPlugin(ScrollTrigger);
 
-        // DÉTECTION DEVICE
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        
-        // OPTIMISATION INTELLIGENTE (10k sur mobile MAIS avec instancing + LOD)
-        const particleCount = isMobile ? 10000 : 30000;
-        
-        console.log(`🎨 Device: ${isMobile ? 'Mobile' : 'Desktop'} | Particles: ${particleCount}`);
+        const particleCount = isMobile ? 12000 : 35000;
 
-        // TEXTURE HDR HAUTE QUALITÉ (Même sur mobile)
+        console.log(`🎨 Particles: ${particleCount} | FX: ${isMobile ? 'Optimized' : 'Full'}`);
+
         function getBrightTexture() {
-            const c = document.createElement('canvas'); 
-            c.width = 64; c.height = 64;
+            const c = document.createElement('canvas'); c.width=64; c.height=64;
             const ctx = c.getContext('2d');
-            
-            // Triple gradient pour effet "star"
             const g1 = ctx.createRadialGradient(32,32,0, 32,32,18);
             g1.addColorStop(0,'rgba(255,255,255,1)');
-            g1.addColorStop(0.2,'rgba(255,255,255,1)');
-            g1.addColorStop(0.5,'rgba(255,255,255,0.6)');
+            g1.addColorStop(0.3,'rgba(255,255,255,0.9)');
             g1.addColorStop(1,'rgba(255,255,255,0)');
             ctx.fillStyle=g1; ctx.fillRect(0,0,64,64);
-            
-            const g2 = ctx.createRadialGradient(32,32,0, 32,32,32);
-            g2.addColorStop(0,'rgba(255,255,255,0.8)');
-            g2.addColorStop(0.3,'rgba(255,255,255,0.3)');
-            g2.addColorStop(1,'rgba(0,0,0,0)');
-            ctx.fillStyle=g2; ctx.fillRect(0,0,64,64);
-            
             return new THREE.CanvasTexture(c);
         }
 
-        // THREE.JS SETUP
+        // THREE.JS
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, isMobile ? 0.0025 : 0.002);
+        scene.fog = new THREE.FogExp2(0x000000, 0.0018);
 
         const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 2500);
         camera.position.set(0, 0, isMobile ? 200 : 160);
 
-        const renderer = new THREE.WebGLRenderer({ 
-            antialias: !isMobile,
-            alpha: true,
-            powerPreference: "high-performance" // Force GPU sur mobile
-        });
+        const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 2 : 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // POST-PROCESSING SPECTACULAIRE (Même sur iPhone)
         const composer = new THREE.EffectComposer(renderer);
         composer.addPass(new THREE.RenderPass(scene, camera));
         const bloom = new THREE.UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight), 
-            isMobile ? 1.6 : 2.2,  // Bloom fort
-            isMobile ? 0.5 : 0.7,
-            0.05
+            isMobile ? 1.8 : 2.5, 0.6, 0.05
         );
         composer.addPass(bloom);
 
-        // FORMES GÉOMÉTRIQUES DÉTAILLÉES
+        // FORMES GÉOMÉTRIQUES
         const Shapes = {
-            chaos: (i) => {
-                const spread = 450;
-                return {
-                    x: (Math.random()-0.5) * spread,
-                    y: (Math.random()-0.5) * spread,
-                    z: (Math.random()-0.5) * spread
-                };
-            },
+            chaos: (i) => ({
+                x: (Math.random()-0.5) * 500,
+                y: (Math.random()-0.5) * 500,
+                z: (Math.random()-0.5) * 500
+            }),
             brain: (i) => {
-                // Deux hémisphères + sillons
-                const hemisphere = i % 2;
-                const r = 50 + Math.random() * 18;
+                const r = 52 + Math.random() * 20;
                 const theta = Math.random() * Math.PI * 2;
                 const phi = Math.acos(2 * Math.random() - 1);
-                
                 let x = r * Math.sin(phi) * Math.cos(theta);
                 let y = r * Math.sin(phi) * Math.sin(theta) * 0.7;
                 let z = r * Math.cos(phi);
-                
-                // Séparation hémisphères
-                x += Math.sign(x) * 15;
-                
-                // Sillons aléatoires
-                if(Math.random() > 0.7) {
-                    const groove = Math.sin(theta * 5) * 5;
-                    y += groove;
-                }
-                
+                x += Math.sign(x) * 16;
+                if(Math.random() > 0.7) y += Math.sin(theta * 5) * 6;
                 return {x, y, z};
             },
             dna: (i) => {
-                const t = (i / particleCount) * Math.PI * 20;
-                const r = 32;
-                const h = 220;
+                const t = (i / particleCount) * Math.PI * 22;
+                const r = 35;
+                const h = 240;
                 const strand = (i % 2 === 0) ? 0 : Math.PI;
-                
-                // Double hélice avec "barreaux"
                 const x = r * Math.cos(t + strand);
                 const z = r * Math.sin(t + strand);
                 const y = (i / particleCount) * h - h/2;
-                
-                // Connexions entre brins
-                if(i % 50 === 0) {
-                    const midX = x * 0.5;
-                    const midZ = z * 0.5;
-                    return {x: midX, y, z: midZ};
-                }
-                
+                if(i % 60 === 0) return {x: x*0.4, y, z: z*0.4};
                 return {x, y, z};
             },
             crystal: (i) => {
-                // Octaèdre parfait avec détails
-                const size = 60;
+                const size = 65;
                 let x = (Math.random()-0.5)*size*2;
                 let y = (Math.random()-0.5)*size*2;
                 let z = (Math.random()-0.5)*size*2;
-                
-                // Projection sur surface octaèdre
                 const sum = Math.abs(x)+Math.abs(y)+Math.abs(z);
                 if(sum > size) {
                     const scale = size / sum;
                     x*=scale; y*=scale; z*=scale;
                 }
-                
-                // Facettes internes
-                if(Math.random() > 0.85) {
-                    x *= 0.8; y *= 0.8; z *= 0.8;
-                }
-                
+                if(Math.random() > 0.85) { x *= 0.75; y *= 0.75; z *= 0.75; }
                 return {x, y, z};
             },
             galaxy: (i) => {
-                // Spirale de Fibonacci avec bras multiples
                 const arm = (i % 5) * (2 * Math.PI / 5);
-                const dist = Math.pow(Math.random(), 1.3);
-                const angle = dist * 16;
-                const r = dist * 140;
-                
+                const dist = Math.pow(Math.random(), 1.2);
+                const angle = dist * 18;
+                const r = dist * 150;
                 const x = r * Math.cos(angle + arm);
                 const z = r * Math.sin(angle + arm);
-                
-                // Épaisseur variable (bulbe central)
-                const thickness = (1 - dist) * 20 + 5;
+                const thickness = (1 - dist) * 22 + 6;
                 const y = (Math.random()-0.5) * thickness;
-                
                 return {x, y, z};
             }
         };
@@ -470,36 +345,48 @@
 
         for(let i=0; i<particleCount; i++){
             const chaos = Shapes.chaos(i);
-            pos[i*3] = chaos.x;
-            pos[i*3+1] = chaos.y;
-            pos[i*3+2] = chaos.z;
+            pos[i*3] = chaos.x; pos[i*3+1] = chaos.y; pos[i*3+2] = chaos.z;
             randoms[i] = Math.random();
-            sizes[i] = 0.5 + Math.random() * 1.5; // Variation de taille
+            sizes[i] = 0.5 + Math.random() * 1.5;
         }
         geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
         geo.setAttribute('target', new THREE.BufferAttribute(target, 3));
         geo.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
         geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
 
-        // SHADER SPECTACULAIRE
+        // LIGNE DE CONNEXION (Pour effet Lightning)
+        const lineGeo = new THREE.BufferGeometry();
+        const linePositions = new Float32Array(6000); // 1000 lignes max
+        lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+        const lineMat = new THREE.LineBasicMaterial({ 
+            color: 0xffcc00, 
+            transparent: true, 
+            opacity: 0,
+            blending: THREE.AdditiveBlending 
+        });
+        const connectionLines = new THREE.LineSegments(lineGeo, lineMat);
+        scene.add(connectionLines);
+
+        // SHADER AVEC EFFETS
         const mat = new THREE.ShaderMaterial({
             uniforms: {
                 uTime: { value: 0 },
                 uColor: { value: new THREE.Color(0x666666) },
                 uTexture: { value: getBrightTexture() },
                 uRatio: { value: window.devicePixelRatio },
-                uProgress: { value: 0 }
+                uEffect: { value: 0 }, // 0=floating, 1=lightning, 2=helix, 3=shatter, 4=spiral
+                uEffectIntensity: { value: 0 }
             },
             vertexShader: `
                 uniform float uTime;
                 uniform float uRatio;
-                uniform float uProgress;
+                uniform float uEffect;
+                uniform float uEffectIntensity;
                 attribute float aRandom;
                 attribute float aSize;
                 varying float vAlpha;
                 varying float vBrightness;
 
-                // Simplex noise pour mouvement organique
                 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
                 vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
                 vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -550,33 +437,65 @@
                 void main() {
                     vec3 p = position;
 
-                    // Respiration organique complexe
-                    float breath = sin(uTime * 0.8 + aRandom * 8.0) * 1.8;
-                    float breath2 = cos(uTime * 1.2 + aRandom * 5.0) * 0.9;
-                    p += normalize(p) * (breath + breath2);
+                    // EFFET 0: FLOATING (Chaos)
+                    float breath = sin(uTime * 0.8 + aRandom * 8.0) * 2.0;
+                    p += normalize(p) * breath;
 
-                    // Turbulence Simplex Noise
+                    // EFFET 1: LIGHTNING (Orage synaptique)
+                    if(uEffect > 0.5 && uEffect < 1.5) {
+                        float lightning = step(0.98, aRandom) * sin(uTime * 30.0 + aRandom * 100.0);
+                        lightning *= uEffectIntensity;
+                        p += vec3(
+                            sin(uTime * 50.0 + aRandom * 20.0) * lightning * 15.0,
+                            cos(uTime * 40.0 + aRandom * 30.0) * lightning * 15.0,
+                            sin(uTime * 45.0 + aRandom * 25.0) * lightning * 15.0
+                        );
+                        vBrightness = 1.0 + lightning * 3.0;
+                    }
+
+                    // EFFET 2: HELIX (Torsion ADN)
+                    if(uEffect > 1.5 && uEffect < 2.5) {
+                        float twist = sin(uTime * 2.0 + p.y * 0.05) * uEffectIntensity * 8.0;
+                        float angle = atan(p.z, p.x) + twist;
+                        float radius = length(vec2(p.x, p.z));
+                        p.x = cos(angle) * radius;
+                        p.z = sin(angle) * radius;
+                    }
+
+                    // EFFET 3: SHATTER (Vibration cristal)
+                    if(uEffect > 2.5 && uEffect < 3.5) {
+                        float shatter = sin(uTime * 60.0 + length(p) * 5.0) * uEffectIntensity;
+                        p += normalize(p) * shatter * 8.0;
+                        vBrightness = 0.8 + abs(shatter) * 0.8;
+                    }
+
+                    // EFFET 4: SPIRAL (Rotation galaxie)
+                    if(uEffect > 3.5) {
+                        float rotation = uTime * 0.5 * uEffectIntensity;
+                        float angle = atan(p.z, p.x) + rotation;
+                        float radius = length(vec2(p.x, p.z));
+                        p.x = cos(angle) * radius;
+                        p.z = sin(angle) * radius;
+                    }
+
+                    // Turbulence globale
                     float turbulence = snoise(p * 0.015 + uTime * 0.1);
-                    p += normalize(p) * turbulence * 3.0;
+                    p += normalize(p) * turbulence * 3.5;
 
                     vec4 mv = modelViewMatrix * vec4(p, 1.0);
                     gl_Position = projectionMatrix * mv;
 
-                    // Taille dynamique basée sur distance + random
-                    float baseSize = ${isMobile ? '55.0' : '65.0'};
-                    float size = (baseSize + aRandom * 35.0) * aSize;
-                    
-                    // Effet de scintillement
-                    float twinkle = sin(uTime * 3.0 + aRandom * 20.0) * 0.3 + 1.0;
+                    float baseSize = ${isMobile ? '58.0' : '70.0'};
+                    float size = (baseSize + aRandom * 38.0) * aSize;
+                    float twinkle = sin(uTime * 3.0 + aRandom * 20.0) * 0.35 + 1.0;
                     size *= twinkle;
 
                     gl_PointSize = (size * uRatio) / -mv.z;
-
-                    // Alpha avec fade distance élégant
-                    vAlpha = smoothstep(400.0, 50.0, -mv.z);
+                    vAlpha = smoothstep(450.0, 50.0, -mv.z);
                     
-                    // Luminosité variable pour profondeur
-                    vBrightness = 0.7 + aRandom * 0.6 + turbulence * 0.2;
+                    if(uEffect < 0.5 || uEffect > 1.5) {
+                        vBrightness = 0.7 + aRandom * 0.6 + turbulence * 0.2;
+                    }
                 }
             `,
             fragmentShader: `
@@ -587,89 +506,131 @@
                 
                 void main() {
                     vec4 tex = texture2D(uTexture, gl_PointCoord);
-                    
-                    // Couleur modulée par brightness
                     vec3 finalColor = uColor * vBrightness;
-                    
-                    gl_FragColor = vec4(finalColor, tex.a * vAlpha * 1.4);
+                    gl_FragColor = vec4(finalColor, tex.a * vAlpha * 1.5);
                 }
             `,
             transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
         });
         scene.add(new THREE.Points(geo, mat));
 
-        // SCROLL-BASED STORYTELLING
-        let currentShape = 'chaos';
+        // EFFET CONNEXIONS (Lightning)
+        function updateConnections() {
+            if(mat.uniforms.uEffect.value < 0.5 || mat.uniforms.uEffect.value > 1.5) {
+                lineMat.opacity = 0;
+                return;
+            }
 
-        function setShape(shapeName, colorHex) {
+            const positions = geo.attributes.position.array;
+            const linePos = lineGeo.attributes.position.array;
+            let lineIndex = 0;
+
+            // Créer des connexions aléatoires entre particules proches
+            for(let i=0; i<particleCount && lineIndex < 5000; i+=isMobile ? 100 : 50) {
+                const x1 = positions[i*3];
+                const y1 = positions[i*3+1];
+                const z1 = positions[i*3+2];
+
+                // Chercher une particule proche
+                for(let j=i+1; j<particleCount && lineIndex < 5000; j+=isMobile ? 120 : 60) {
+                    const x2 = positions[j*3];
+                    const y2 = positions[j*3+1];
+                    const z2 = positions[j*3+2];
+
+                    const dist = Math.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2);
+
+                    if(dist < (isMobile ? 25 : 30) && Math.random() > 0.7) {
+                        linePos[lineIndex++] = x1;
+                        linePos[lineIndex++] = y1;
+                        linePos[lineIndex++] = z1;
+                        linePos[lineIndex++] = x2;
+                        linePos[lineIndex++] = y2;
+                        linePos[lineIndex++] = z2;
+                    }
+                }
+            }
+
+            lineGeo.attributes.position.needsUpdate = true;
+            lineGeo.setDrawRange(0, lineIndex / 3);
+            lineMat.opacity = mat.uniforms.uEffectIntensity.value * 0.4;
+        }
+
+        // GESTION CHAPITRES
+        const effectMap = { floating: 0, lightning: 1, helix: 2, shatter: 3, spiral: 4 };
+        let currentShape = 'chaos';
+        let connectionInterval;
+
+        function setShape(shapeName, colorHex, effectName) {
             if(shapeName === currentShape) return;
             currentShape = shapeName;
 
             const targets = geo.attributes.target.array;
             for(let i=0; i<particleCount; i++) {
                 const p = Shapes[shapeName](i);
-                targets[i*3] = p.x;
-                targets[i*3+1] = p.y;
-                targets[i*3+2] = p.z;
+                targets[i*3] = p.x; targets[i*3+1] = p.y; targets[i*3+2] = p.z;
             }
             geo.attributes.target.needsUpdate = true;
 
-            // Transition couleur douce
             gsap.to(mat.uniforms.uColor.value, {
                 r: new THREE.Color(colorHex).r,
                 g: new THREE.Color(colorHex).g,
                 b: new THREE.Color(colorHex).b,
-                duration: 2.5,
-                ease: "power2.inOut"
+                duration: 2.5, ease: "power2.inOut"
             });
+
+            // Activation effet
+            mat.uniforms.uEffect.value = effectMap[effectName] || 0;
+            gsap.to(mat.uniforms.uEffectIntensity, {
+                value: 1.0, duration: 2, ease: "power2.out"
+            });
+
+            // Connexions pour lightning
+            clearInterval(connectionInterval);
+            if(effectName === 'lightning') {
+                connectionInterval = setInterval(updateConnections, isMobile ? 150 : 100);
+            }
         }
 
-        // SCROLL TRIGGERS ENRICHIS
+        // SCROLL TRIGGERS
         document.querySelectorAll('.chapter').forEach((chapter, idx) => {
             const shape = chapter.dataset.shape;
             const color = parseInt(chapter.dataset.color);
+            const effect = chapter.dataset.effect;
 
             ScrollTrigger.create({
                 trigger: chapter,
                 start: 'top 55%',
                 end: 'bottom 45%',
                 onEnter: () => {
-                    setShape(shape, color);
+                    setShape(shape, color, effect);
                     chapter.classList.add('visible');
                 },
                 onEnterBack: () => {
-                    setShape(shape, color);
+                    setShape(shape, color, effect);
                     chapter.classList.add('visible');
                 },
-                onLeave: () => chapter.classList.remove('visible'),
-                onLeaveBack: () => chapter.classList.remove('visible')
+                onLeave: () => {
+                    chapter.classList.remove('visible');
+                    gsap.to(mat.uniforms.uEffectIntensity, {value: 0, duration: 1});
+                },
+                onLeaveBack: () => {
+                    chapter.classList.remove('visible');
+                    gsap.to(mat.uniforms.uEffectIntensity, {value: 0, duration: 1});
+                }
             });
 
-            // Animation caméra cinématique
             gsap.to(camera.position, {
-                z: (isMobile ? 200 : 160) - idx * (isMobile ? 18 : 25),
-                y: Math.sin(idx) * (isMobile ? 10 : 15),
-                scrollTrigger: {
-                    trigger: chapter,
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    scrub: 1.5
-                }
+                z: (isMobile ? 200 : 160) - idx * (isMobile ? 20 : 28),
+                y: Math.sin(idx * 0.8) * (isMobile ? 12 : 18),
+                scrollTrigger: { trigger: chapter, start: 'top bottom', end: 'bottom top', scrub: 1.5 }
             });
 
-            // Rotation caméra subtile par chapitre
             gsap.to(camera.rotation, {
-                z: (idx % 2 === 0 ? 0.05 : -0.05),
-                scrollTrigger: {
-                    trigger: chapter,
-                    start: 'top center',
-                    end: 'bottom center',
-                    scrub: 2
-                }
+                z: (idx % 2 === 0 ? 0.06 : -0.06),
+                scrollTrigger: { trigger: chapter, start: 'top center', end: 'bottom center', scrub: 2 }
             });
         });
 
-        // PROGRESS BAR
         ScrollTrigger.create({
             trigger: '#story',
             start: 'top top',
@@ -679,7 +640,7 @@
             }
         });
 
-        // ANIMATION LOOP OPTIMISÉE
+        // ANIMATION LOOP
         const clock = new THREE.Clock();
 
         function animate() {
@@ -688,10 +649,9 @@
             const dt = clock.getDelta();
             mat.uniforms.uTime.value = clock.getElapsedTime();
 
-            // Morphing CPU fluide
             const posAttr = geo.attributes.position;
             const targetAttr = geo.attributes.target;
-            const speed = (isMobile ? 1.5 : 2.0) * dt;
+            const speed = (isMobile ? 1.6 : 2.2) * dt;
 
             for(let i=0; i<particleCount; i++) {
                 const ix = i*3;
@@ -704,27 +664,14 @@
             composer.render();
         }
 
-        // START EXPERIENCE
         document.getElementById('btn-start').addEventListener('click', () => {
-            gsap.to('#intro', {
-                opacity: 0,
-                duration: 1.2,
-                ease: "power2.inOut",
-                onComplete: () => {
-                    document.getElementById('intro').style.display = 'none';
-                }
+            gsap.to('#intro', { opacity: 0, duration: 1.2, ease: "power2.inOut", 
+                onComplete: () => document.getElementById('intro').style.display='none'
             });
-            
-            gsap.to('#scroll-hint', {
-                opacity: 1,
-                delay: 1.5,
-                duration: 1.5
-            });
-            
+            gsap.to('#scroll-hint', { opacity: 1, delay: 1.5, duration: 1.5 });
             animate();
         });
 
-        // RESIZE OPTIMISÉ
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
