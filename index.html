@@ -6,7 +6,6 @@
   <title>L’Atelier des Particules — WJSBUTLER & CO (GPGPU Fluid)</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600&display=swap');
-
     :root{
       --ink: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.55);
@@ -191,7 +190,7 @@
     <div class="intro">
       <h1>L’Atelier<br/>des Particules</h1>
       <div class="sub">Simulation GPGPU — Curl Noise — Post cinéma</div>
-      <div class="warn">
+      <div class="warn" id="warnBox">
         <b>Attention :</b> version “blockbuster”. GPU très sollicité (compute + bloom).<br/>
         Utilise <b>Qualité</b> si ton appareil chauffe/rame.
       </div>
@@ -200,6 +199,12 @@
   </div>
 
   <script type="module">
+    // If something fails early, we surface it in the overlay instead of “dead clicks”.
+    const warnBox = document.getElementById("warnBox");
+    window.addEventListener("error", (e) => {
+      warnBox.innerHTML = "<b>Erreur JS :</b> " + (e.message || "inconnue") + "<br/>Ouvre la console pour le détail.";
+    });
+
     import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
     import { GPUComputationRenderer } from "https://unpkg.com/three@0.128.0/examples/jsm/misc/GPUComputationRenderer.js";
     import { EffectComposer } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js";
@@ -209,30 +214,24 @@
     import { FilmPass } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/FilmPass.js";
 
     const SETTINGS = {
-      SIZE: 192, // 192^2 = 36864 particules
+      SIZE: 192, // 36864 particules
       BOUNDS: 220,
       CAMERA_RADIUS: 190,
-
       DAMPING: 0.985,
       NOISE_SCALE: 0.0105,
       NOISE_SPEED: 0.22,
       CURL_STRENGTH: 2.25,
-
       ATTRACT_STRENGTH: 0.08,
       TARGET_BLEND: 0.035,
-
       POINT_SIZE: 160.0,
       EXPOSURE: 1.22,
-
       DPR_HIGH: 2.0,
       DPR_LOW: 1.0,
       useHighQuality: true,
-
       bloomOn: true,
       bloomStrength: 1.35,
       bloomRadius: 0.45,
       bloomThreshold: 0.18,
-
       rgbShift: 0.0018,
       grainIntensity: 0.22
     };
@@ -284,8 +283,6 @@
     const PARTICLES = SIZE * SIZE;
 
     const gpuCompute = new GPUComputationRenderer(SIZE, SIZE, renderer);
-
-    // Compatibility: half float is often safer on mobile
     gpuCompute.setDataType(THREE.HalfFloatType);
 
     const dtPosition = gpuCompute.createTexture();
@@ -383,7 +380,6 @@
     }
     writeTargetShape(story[0].target);
 
-    // ✅ FIX: declare texturePosition + textureVelocity explicitly
     const velocityShader = /* glsl */`
       uniform float uTime;
       uniform float uDelta;
@@ -398,7 +394,7 @@
       uniform float uTargetBlend;
 
       uniform sampler2D texturePosition;
-      uniform sampler2D textureVelocity;   // ✅ REQUIRED
+      uniform sampler2D textureVelocity;
       uniform sampler2D textureTarget;
 
       float hash(vec3 p){
@@ -483,10 +479,9 @@
       }
     `;
 
-    // ✅ FIX: declare texturePosition explicitly
     const positionShader = /* glsl */`
       uniform float uDelta;
-      uniform sampler2D texturePosition;  // ✅ REQUIRED
+      uniform sampler2D texturePosition;
       uniform sampler2D textureVelocity;
       void main(){
         vec2 uv = gl_FragCoord.xy / resolution.xy;
@@ -518,9 +513,8 @@
 
     const err = gpuCompute.init();
     if (err) {
-      console.error("GPUComputationRenderer init error:", err);
-      // Si ça casse ici : l'appareil / navigateur ne supporte pas le render-to-float/half-float.
-      // Dans ce cas, il faudra baisser SIZE (128) et/ou changer de device.
+      warnBox.innerHTML = "<b>Compute init error :</b> " + err + "<br/>Essaie SIZE=128 ou désactive Bloom.";
+      console.error(err);
     }
 
     function createSupernovaTexture(){
@@ -546,33 +540,19 @@
       return new THREE.CanvasTexture(c);
     }
 
-    // Geometry with UVs into compute texture
+    // Geometry UVs (✅ clean, no stray syntax)
     const geom = new THREE.BufferGeometry();
     const dummyPos = new Float32Array(PARTICLES * 3);
     const uvs = new Float32Array(PARTICLES * 2);
-    let idx = 0;
+    let id = 0;
     for(let y=0;y<SIZE;y++){
       for(let x=0;x<SIZE;x++){
-        dummyPos[idx*3+0]=0; dummyPos[idx*3+1]=0; dummyPos[idx*3+2]=0;
-        uvs[idx*2+0]= x/(SIZE-1);
-        uvs[idx*2+1]= y/(SIZE-1SIZE? 1 : (SIZE-1)); // avoid 0 division in edge cases (SIZE>=2 always)
-        idx++;
+        dummyPos[id*3+0]=0; dummyPos[id*3+1]=0; dummyPos[id*3+2]=0;
+        uvs[id*2+0]= x/(SIZE-1);
+        uvs[id*2+1]= y/(SIZE-1);
+        id++;
       }
     }
-    // Correct the above line to be safe:
-    for (let i=0;i<uvs.length;i+=2){
-      // no-op; kept for clarity
-    }
-    // Actually fix UV generation (above line had an intentional typo risk, so overwrite properly):
-    idx = 0;
-    for(let y=0;y<SIZE;y++){
-      for(let x=0;x<SIZE;x++){
-        uvs[idx*2+0]= x/(SIZE-1);
-        uvs[idx*2+1]= y/(SIZE-1);
-        idx++;
-      }
-    }
-
     geom.setAttribute("position", new THREE.BufferAttribute(dummyPos,3));
     geom.setAttribute("uv", new THREE.BufferAttribute(uvs,2));
 
@@ -586,7 +566,7 @@
         uRatio:{ value: renderer.getPixelRatio() },
         uPulse:{ value: 0.0 }
       },
-      vertexShader: /* glsl */`
+      vertexShader: `
         uniform sampler2D uPositions;
         uniform float uTime;
         uniform float uPointSize;
@@ -612,7 +592,7 @@
           vAlpha = smoothstep(650.0, 220.0, -mv.z);
         }
       `,
-      fragmentShader: /* glsl */`
+      fragmentShader: `
         uniform vec3 uColor;
         uniform sampler2D uTexture;
         varying float vAlpha;
@@ -651,23 +631,10 @@
     composer.addPass(bloom);
 
     const RGBShiftShader = {
-      uniforms: {
-        tDiffuse: { value: null },
-        amount: { value: SETTINGS.rgbShift },
-        angle: { value: 0.35 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main(){
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
+      uniforms: { tDiffuse:{value:null}, amount:{value:SETTINGS.rgbShift}, angle:{value:0.35} },
+      vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
       fragmentShader: `
-        uniform sampler2D tDiffuse;
-        uniform float amount;
-        uniform float angle;
-        varying vec2 vUv;
+        uniform sampler2D tDiffuse; uniform float amount; uniform float angle; varying vec2 vUv;
         void main(){
           vec2 offset = amount * vec2(cos(angle), sin(angle));
           vec4 cr = texture2D(tDiffuse, vUv + offset);
@@ -683,9 +650,7 @@
     const film = new FilmPass(SETTINGS.grainIntensity, 0.025, 648, false);
     composer.addPass(film);
 
-    function applyPost(){
-      bloom.enabled = SETTINGS.bloomOn;
-    }
+    function applyPost(){ bloom.enabled = SETTINGS.bloomOn; }
     applyPost();
 
     function pulse(){
@@ -766,14 +731,18 @@
       animate();
     }
 
-    document.body.addEventListener("click", ()=>{
+    // ✅ More robust interactions
+    function onPrimaryAction(){
       if(!running) start();
       else next();
-    });
+    }
+    window.addEventListener("pointerdown", onPrimaryAction, { passive:true });
+    window.addEventListener("touchstart", (e)=>{ onPrimaryAction(); }, { passive:true });
+
     window.addEventListener("keydown", (e)=>{
       if(e.key === " " || e.key === "Enter"){
         e.preventDefault();
-        if(!running) start(); else next();
+        onPrimaryAction();
       }
     });
 
