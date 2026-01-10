@@ -1,410 +1,947 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>L'Atelier - BLOCKBUSTER EDITION</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>L'Atelier des Particules — WJSBUTLER & CO</title>
 
-        body { 
-            margin: 0; overflow: hidden; background-color: #000; 
-            font-family: 'Montserrat', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600&display=swap');
 
-        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+    :root{
+      --bg:#000;
+      --ink:#fff;
+      --muted:#8a8a8a;
+      --gold:#ffaa00;
+      --cyan:#00aaff;
+      --magenta:#ff0055;
+      --emerald:#00ff88;
 
-        /* UI CINEMA */
-        #ui-layer {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; z-index: 10;
-            background: linear-gradient(to top, #000 0%, transparent 100%);
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            padding-bottom: 50px; pointer-events: none;
-        }
+      --glass: rgba(8,10,14,0.48);
+      --glass2: rgba(8,10,14,0.22);
+      --stroke: rgba(255,255,255,0.08);
 
-        .chapter {
-            font-family: 'Cinzel', serif; color: #888; letter-spacing: 5px; font-size: 0.8rem;
-            margin-bottom: 10px; text-transform: uppercase;
-        }
+      --shadow: 0 30px 80px rgba(0,0,0,0.65);
+      --glow: 0 0 28px rgba(255,255,255,0.25);
+    }
 
-        .text {
-            font-family: 'Cinzel', serif; color: white; font-size: clamp(1.5rem, 5vw, 2.5rem);
-            text-align: center; max-width: 90%; line-height: 1.4;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-            opacity: 0; transform: translateY(20px); transition: all 1s ease;
-        }
-        .text.visible { opacity: 1; transform: translateY(0); }
-        .highlight { color: #ffaa00; text-shadow: 0 0 30px #ffaa00; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; overflow:hidden; background:var(--bg);
+      font-family:'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      color: var(--ink);
+    }
 
-        /* ECRAN TITRE */
-        #intro {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50;
-            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 1s; cursor: pointer;
-        }
-        h1 {
-            font-family: 'Cinzel', serif; font-size: clamp(2rem, 8vw, 4rem); color: white;
-            text-align: center; text-shadow: 0 0 50px #00aaff;
-        }
-        .tap { margin-top: 20px; color: #666; font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    #canvas-container{ position:absolute; inset:0; z-index:1; }
 
-    </style>
+    /* --- CINEMATIC VIGNETTE + FILM GRAIN --- */
+    #postfx{
+      position:absolute; inset:0; z-index:5; pointer-events:none;
+      background:
+        radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 95%),
+        linear-gradient(to bottom, rgba(0,0,0,0.18), rgba(0,0,0,0.62));
+      mix-blend-mode: normal;
+    }
+    #grain{
+      position:absolute; inset:-20%; z-index:6; pointer-events:none;
+      opacity:.08;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");
+      animation: grainMove 6s steps(10) infinite;
+    }
+    @keyframes grainMove{
+      0%{ transform: translate3d(-4%, -6%, 0); }
+      25%{ transform: translate3d(6%, -2%, 0); }
+      50%{ transform: translate3d(2%, 6%, 0); }
+      75%{ transform: translate3d(-6%, 2%, 0); }
+      100%{ transform: translate3d(-4%, -6%, 0); }
+    }
+
+    /* --- TOP HUD (DISCREET) --- */
+    #top-hud{
+      position:absolute; top:18px; left:18px; right:18px; z-index:20;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; pointer-events:none;
+    }
+    .badge{
+      pointer-events:auto;
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      background: linear-gradient(180deg, var(--glass), var(--glass2));
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .badge .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: var(--gold);
+      box-shadow: 0 0 18px rgba(255,170,0,.9);
+      animation: pulseDot 1.8s ease-in-out infinite;
+    }
+    @keyframes pulseDot{
+      0%,100%{ transform:scale(1); opacity:.6; }
+      50%{ transform:scale(1.35); opacity:1; }
+    }
+    .badge .brand{
+      font-family:'Cinzel', serif;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-size: .72rem;
+      color: rgba(255,255,255,.88);
+      white-space: nowrap;
+    }
+    .badge .sub{
+      font-size:.72rem;
+      color: rgba(255,255,255,.55);
+      letter-spacing:.08em;
+      text-transform: uppercase;
+    }
+
+    .controls{
+      pointer-events:auto;
+      display:flex; gap:10px; align-items:center;
+    }
+    .btn{
+      pointer-events:auto;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      color: rgba(255,255,255,.85);
+      padding:10px 12px;
+      border-radius:12px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 16px 50px rgba(0,0,0,.45);
+      cursor:pointer;
+      user-select:none;
+      display:flex; align-items:center; gap:10px;
+      font-size:.82rem;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn kbd{
+      font-size:.72rem;
+      opacity:.7;
+      padding:2px 6px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:8px;
+      background: rgba(0,0,0,.25);
+    }
+
+    /* --- UI CINEMA (BOTTOM) --- */
+    #ui-layer{
+      position:absolute; left:0; right:0; bottom:0; height:46%;
+      z-index:15;
+      display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+      padding: 0 18px 46px;
+      pointer-events:none;
+      background: linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.55) 35%, rgba(0,0,0,0) 100%);
+    }
+
+    .chapter{
+      font-family:'Cinzel', serif;
+      color: rgba(255,255,255,.58);
+      letter-spacing:.42em;
+      font-size:.72rem;
+      text-transform:uppercase;
+      margin-bottom:10px;
+      opacity:.0;
+      transform: translateY(10px);
+      transition: all .9s ease;
+    }
+    .chapter.visible{ opacity:1; transform:translateY(0); }
+
+    .card{
+      width:min(980px, 96%);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 18px 18px 16px;
+      pointer-events:none;
+    }
+    .text{
+      font-family:'Cinzel', serif;
+      font-size: clamp(1.35rem, 4.8vw, 2.35rem);
+      line-height:1.25;
+      text-align:center;
+      color: rgba(255,255,255,.95);
+      text-shadow: 0 0 28px rgba(255,255,255,.20);
+      margin: 4px 10px 10px;
+      opacity:0;
+      transform: translateY(18px);
+      transition: all 1.05s cubic-bezier(.2,.8,.2,1);
+    }
+    .text.visible{ opacity:1; transform: translateY(0); }
+
+    .meta{
+      margin-top: 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      font-size:.74rem;
+      color: rgba(255,255,255,.48);
+      letter-spacing:.12em;
+      text-transform: uppercase;
+    }
+    .meta .hint{
+      display:flex; align-items:center; gap:10px;
+      opacity:.9;
+    }
+    .spark{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(255,255,255,.22);
+      box-shadow: 0 0 14px rgba(255,255,255,.25);
+      animation: spark 1.6s ease-in-out infinite;
+    }
+    @keyframes spark{
+      0%,100%{ transform: scale(.9); opacity:.55; }
+      50%{ transform: scale(1.2); opacity:1; }
+    }
+
+    .progress{
+      width: 180px; height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      overflow:hidden;
+    }
+    .bar{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(255,170,0,.2), rgba(255,170,0,.95), rgba(0,170,255,.55));
+      filter: drop-shadow(0 0 12px rgba(255,170,0,.55));
+      border-radius:999px;
+      transform-origin:left center;
+    }
+
+    .highlight{
+      color: var(--gold);
+      text-shadow: 0 0 28px rgba(255,170,0,.55);
+    }
+
+    /* --- INTRO SCREEN --- */
+    #intro{
+      position:absolute; inset:0; z-index:60;
+      display:flex; flex-direction:column; justify-content:center; align-items:center;
+      background:
+        radial-gradient(ellipse at center, rgba(0,170,255,.08) 0%, rgba(0,0,0,1) 55%),
+        #000;
+      transition: opacity 1.0s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .title{
+      font-family:'Cinzel', serif;
+      font-size: clamp(2.1rem, 9vw, 4.2rem);
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      text-align:center;
+      margin: 0;
+      color: rgba(255,255,255,.95);
+      text-shadow:
+        0 0 60px rgba(0,170,255,.25),
+        0 0 22px rgba(255,255,255,.12);
+    }
+    .subtitle{
+      margin-top: 12px;
+      font-size: .85rem;
+      color: rgba(255,255,255,.55);
+      letter-spacing:.36em;
+      text-transform: uppercase;
+      text-align:center;
+      max-width: 92%;
+    }
+    .tap{
+      margin-top: 26px;
+      color: rgba(255,255,255,.45);
+      font-size: .72rem;
+      letter-spacing:.32em;
+      text-transform: uppercase;
+      animation: pulse 1.6s ease-in-out infinite;
+      display:flex; align-items:center; gap:10px;
+    }
+    @keyframes pulse{
+      0%,100%{ opacity:.45; transform: translateY(0); }
+      50%{ opacity:1; transform: translateY(-2px); }
+    }
+
+    /* --- MOBILE SAFETY --- */
+    @media (max-width: 520px){
+      .progress{ width: 120px; }
+      .btn span{ display:none; }
+    }
+  </style>
 </head>
+
 <body>
+  <div id="canvas-container"></div>
+  <div id="postfx"></div>
+  <div id="grain"></div>
 
-    <div id="intro">
-        <h1>L'ATELIER<br>DES PARTICULES</h1>
-        <div class="tap">Touchez pour démarrer</div>
+  <div id="top-hud">
+    <div class="badge" title="Signature">
+      <div class="dot"></div>
+      <div>
+        <div class="brand">WJSBUTLER & CO</div>
+        <div class="sub">Hospitalité cinématique</div>
+      </div>
     </div>
 
-    <div id="canvas-container"></div>
+    <div class="controls">
+      <button id="btn-sound" class="btn" aria-label="Son">
+        🔊 <span>Son</span> <kbd>M</kbd>
+      </button>
+      <button id="btn-quality" class="btn" aria-label="Qualité">
+        ✨ <span>Qualité</span> <kbd>Q</kbd>
+      </button>
+      <button id="btn-replay" class="btn" aria-label="Rejouer">
+        ⟲ <span>Rejouer</span> <kbd>R</kbd>
+      </button>
+    </div>
+  </div>
 
-    <div id="ui-layer">
-        <div id="chapter-el" class="chapter"></div>
-        <div id="text-el" class="text"></div>
-        <div style="font-size: 0.6rem; color: #444; margin-top: 30px; text-transform: uppercase; letter-spacing: 2px;">
-            Touchez l'écran pour la suite
+  <div id="intro">
+    <h1 class="title">L’ATELIER<br>DES PARTICULES</h1>
+    <div class="subtitle">Une traversée. Une empreinte. Une scène.</div>
+    <div class="tap">Touchez pour démarrer <span class="spark"></span></div>
+  </div>
+
+  <div id="ui-layer">
+    <div id="chapter-el" class="chapter"></div>
+    <div class="card">
+      <div id="text-el" class="text"></div>
+      <div class="meta">
+        <div class="hint"><span class="spark"></span> Touchez pour la suite</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="progress"><div id="bar" class="bar"></div></div>
+          <div id="count" style="min-width:72px; text-align:right;">01/06</div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-    <script>
-        // --- 1. CONFIGURATION "BLOCKBUSTER" ---
-        // Moins de particules, mais BEAUCOUP plus grosses et visibles
-        const PARTICLE_COUNT = 8000; 
-        const PARTICLE_SIZE = 150.0; // Taille de base énorme (sera modulée par la profondeur)
+  <script>
+    /* ==========================================================
+       WJSBUTLER & CO — CINEMATIC PARTICLES EDITION
+       - Bloom-like glow via additive + tone mapping
+       - Multiple shapes + camera choreography
+       - Interactive parallax, pause, quality toggle, soundscape
+       ========================================================== */
 
-        // --- 2. HISTOIRE ---
-        const story = [
-            {
-                chapter: "I. LA MATIÈRE",
-                text: "Une idée est une <span class='highlight'>étincelle</span> dans le noir.",
-                shape: "chaos", // Explosion centrale
-                color: new THREE.Color(1.0, 0.6, 0.1), // Or Feu
-                speed: 1.0
-            },
-            {
-                chapter: "II. L'ÉMOTION",
-                text: "L'émotion est une <span class='highlight' style='color:#00aaff; text-shadow:0 0 30px #00aaff'>vague</span> qui nous emporte.",
-                shape: "wave", // Nappe ondulante
-                color: new THREE.Color(0.1, 0.4, 1.0), // Bleu Océan Électrique
-                speed: 0.5
-            },
-            {
-                chapter: "III. LA CONNEXION",
-                text: "L'empathie tisse des <span class='highlight' style='color:#ff0055; text-shadow:0 0 30px #ff0055'>liens</span> invisibles.",
-                shape: "dna", // Double hélice
-                color: new THREE.Color(1.0, 0.1, 0.4), // Rouge Magenta
-                speed: 0.8
-            },
-            {
-                chapter: "IV. L'ŒUVRE",
-                text: "Le chaos devient <span class='highlight' style='color:#00ff88; text-shadow:0 0 30px #00ff88'>structure</span>.",
-                shape: "sphere", // Sphère parfaite
-                color: new THREE.Color(0.2, 1.0, 0.6), // Vert Émeraude
-                speed: 0.2
-            },
-            {
-                chapter: "V. INFINI",
-                text: "Tu es le créateur de cet univers.",
-                shape: "galaxy", // Galaxie
-                color: new THREE.Color(0.8, 0.5, 1.0), // Violet
-                speed: 2.0
-            }
-        ];
-        let currentStep = -1;
+    // --- 0. SETTINGS ---
+    const SETTINGS = {
+      PARTICLE_COUNT: 11000,          // + dense, still performant on modern phones
+      BASE_SIZE: 145.0,               // huge points (depth-scaled in shader)
+      SPEED_LERP: 2.1,                // base morph speed (multiplied per scene)
+      FOG_DENSITY: 0.0018,
+      CAMERA_RADIUS: 160,
+      CAMERA_Z: 140,
+      PARALLAX: 0.10,
+      DPR_HIGH: 2,
+      DPR_LOW: 1,
+      USE_HIGH_QUALITY: true,
+      SOUND_ON: true
+    };
 
-        // --- 3. TEXTURE GÉNÉRÉE (LE SECRET DE la VISIBILITÉ) ---
-        function createSupernovaTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 128; canvas.height = 128; // Haute résolution
-            const ctx = canvas.getContext('2d');
-            
-            // Dégradé Radial Puissant
-            const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Cœur blanc pur
-            gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)'); // Halo interne brillant
-            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)'); // Halo externe
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Transparent
-            
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 128, 128);
-            
-            const texture = new THREE.CanvasTexture(canvas);
-            return texture;
+    // --- 1. STORY (WJSBUTLER & CO touch: "empreinte", scène, orchestration) ---
+    const story = [
+      {
+        chapter: "I. L’OUVERTURE",
+        text: "Ici, tout commence par une <span class='highlight'>respiration</span>.",
+        shape: "breath",
+        color: new THREE.Color(1.0, 0.78, 0.22),
+        speed: 1.0,
+        cam: { radius: 170, lift: 10, drift: 0.12 }
+      },
+      {
+        chapter: "II. LA MATIÈRE",
+        text: "Une idée est une <span class='highlight'>étincelle</span> dans le noir.",
+        shape: "chaos",
+        color: new THREE.Color(1.0, 0.60, 0.12),
+        speed: 1.2,
+        cam: { radius: 155, lift: 0, drift: 0.10 }
+      },
+      {
+        chapter: "III. L’ÉMOTION",
+        text: "L’émotion est une <span class='highlight' style='color:#00aaff; text-shadow:0 0 28px #00aaff'>vague</span> qui nous emporte.",
+        shape: "wave",
+        color: new THREE.Color(0.12, 0.50, 1.0),
+        speed: 0.85,
+        cam: { radius: 175, lift: -8, drift: 0.08 }
+      },
+      {
+        chapter: "IV. LA CONNEXION",
+        text: "L’empathie tisse des <span class='highlight' style='color:#ff0055; text-shadow:0 0 28px #ff0055'>liens</span> invisibles.",
+        shape: "dna",
+        color: new THREE.Color(1.0, 0.10, 0.45),
+        speed: 1.0,
+        cam: { radius: 150, lift: 14, drift: 0.14 }
+      },
+      {
+        chapter: "V. L’ŒUVRE",
+        text: "Le chaos devient <span class='highlight' style='color:#00ff88; text-shadow:0 0 28px #00ff88'>structure</span>.",
+        shape: "sphere",
+        color: new THREE.Color(0.20, 1.0, 0.62),
+        speed: 0.65,
+        cam: { radius: 145, lift: 0, drift: 0.10 }
+      },
+      {
+        chapter: "VI. L’EMPREINTE",
+        text: "Et l’instant devient <span class='highlight' style='color:#c7a2ff; text-shadow:0 0 28px #c7a2ff'>mémoire</span>.",
+        shape: "galaxy",
+        color: new THREE.Color(0.78, 0.55, 1.0),
+        speed: 1.35,
+        cam: { radius: 190, lift: -4, drift: 0.16 }
+      }
+    ];
+    let currentStep = -1;
+    let isRunning = false;
+
+    // --- 2. TEXTURE (supernova) ---
+    function createSupernovaTexture(){
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
+
+      const g = ctx.createRadialGradient(128,128,0, 128,128,128);
+      g.addColorStop(0.00, 'rgba(255,255,255,1)');
+      g.addColorStop(0.12, 'rgba(255,255,255,.95)');
+      g.addColorStop(0.28, 'rgba(255,255,255,.55)');
+      g.addColorStop(0.55, 'rgba(255,255,255,.18)');
+      g.addColorStop(1.00, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,256,256);
+
+      // micro rings for "lens" feel
+      ctx.globalCompositeOperation = 'lighter';
+      for(let i=0;i<7;i++){
+        ctx.beginPath();
+        ctx.arc(128,128, 18 + i*18, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(255,255,255,${0.06 - i*0.007})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    // --- 3. AUDIO (lightweight, no external files) ---
+    // Film-like "air" + pulse + gentle chimes on scene switch.
+    let audioCtx, master, noiseNode, lfo, chimeGain, isMuted = false;
+
+    function initAudio(){
+      if(audioCtx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+
+      master = audioCtx.createGain();
+      master.gain.value = 0.7;
+      master.connect(audioCtx.destination);
+
+      // Pink-ish noise (simple filtered white)
+      const bufferSize = 2 * audioCtx.sampleRate;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) output[i] = (Math.random() * 2 - 1) * 0.4;
+
+      noiseNode = audioCtx.createBufferSource();
+      noiseNode.buffer = noiseBuffer;
+      noiseNode.loop = true;
+
+      const hp = audioCtx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.value = 240;
+
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 1800;
+
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.value = 0.10;
+
+      // Slow breathing LFO
+      lfo = audioCtx.createOscillator();
+      lfo.type = "sine";
+      lfo.frequency.value = 0.10;
+      const lfoGain = audioCtx.createGain();
+      lfoGain.gain.value = 0.06;
+      lfo.connect(lfoGain);
+      lfoGain.connect(noiseGain.gain);
+
+      // Chime bus
+      chimeGain = audioCtx.createGain();
+      chimeGain.gain.value = 0.35;
+
+      noiseNode.connect(hp);
+      hp.connect(lp);
+      lp.connect(noiseGain);
+      noiseGain.connect(master);
+      chimeGain.connect(master);
+
+      noiseNode.start();
+      lfo.start();
+    }
+
+    function chime(){
+      if(!audioCtx || isMuted) return;
+      const now = audioCtx.currentTime;
+
+      const o1 = audioCtx.createOscillator();
+      const o2 = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+
+      o1.type = "sine";
+      o2.type = "triangle";
+      o1.frequency.setValueAtTime(440, now);
+      o2.frequency.setValueAtTime(660, now);
+
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 900;
+      bp.Q.value = 4;
+
+      o1.connect(bp); o2.connect(bp);
+      bp.connect(g);
+      g.connect(chimeGain);
+
+      o1.start(now); o2.start(now);
+      o1.stop(now + 0.9); o2.stop(now + 0.9);
+    }
+
+    function setMute(m){
+      isMuted = m;
+      if(master) master.gain.value = m ? 0.0 : 0.7;
+    }
+
+    // --- 4. THREE SETUP ---
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000000, SETTINGS.FOG_DENSITY);
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 2400);
+    camera.position.z = SETTINGS.CAMERA_Z;
+
+    const renderer = new THREE.WebGLRenderer({ powerPreference:"high-performance", antialias:false, alpha:false });
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, SETTINGS.USE_HIGH_QUALITY ? SETTINGS.DPR_HIGH : SETTINGS.DPR_LOW));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+
+    // Subtle light for a faint "volumetric" feel (even though points are emissive)
+    const ambient = new THREE.AmbientLight(0xffffff, 0.10);
+    scene.add(ambient);
+
+    // --- 5. PARTICLES GEOMETRY ---
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(SETTINGS.PARTICLE_COUNT * 3);
+    const targets   = new Float32Array(SETTINGS.PARTICLE_COUNT * 3);
+    const randoms   = new Float32Array(SETTINGS.PARTICLE_COUNT);
+
+    for(let i=0;i<SETTINGS.PARTICLE_COUNT;i++){
+      positions[i*3]   = (Math.random()-0.5) * 12;
+      positions[i*3+1] = (Math.random()-0.5) * 12;
+      positions[i*3+2] = (Math.random()-0.5) * 12;
+      randoms[i] = Math.random();
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('target',   new THREE.BufferAttribute(targets, 3));
+    geometry.setAttribute('aRandom',  new THREE.BufferAttribute(randoms, 1));
+
+    // --- 6. SHADER (cinematic glow + twinkle + depth fade) ---
+    const material = new THREE.ShaderMaterial({
+      uniforms:{
+        uTime:{ value:0 },
+        uColor:{ value: new THREE.Color(1,1,1) },
+        uTexture:{ value: createSupernovaTexture() },
+        uRatio:{ value: renderer.getPixelRatio() },
+        uPulse:{ value: 0.0 } // used for accent on scene switch
+      },
+      vertexShader: `
+        uniform float uTime;
+        uniform float uRatio;
+        uniform float uPulse;
+        attribute vec3 target;
+        attribute float aRandom;
+        varying float vAlpha;
+        varying float vTwinkle;
+
+        void main(){
+          vec3 pos = position;
+
+          // "Breath" + organic vibration
+          float breath = sin(uTime * 1.15 + aRandom * 18.0) * 1.6;
+          float micro  = sin(uTime * (2.4 + aRandom*1.2) + aRandom * 40.0) * 0.55;
+          pos += normalize(pos + 0.0001) * (breath + micro);
+
+          // Twinkle
+          vTwinkle = 0.6 + 0.4 * sin(uTime * (3.0 + aRandom*3.0) + aRandom * 100.0);
+
+          vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+          gl_Position = projectionMatrix * mv;
+
+          // Dynamic point size
+          float base = ${SETTINGS.BASE_SIZE.toFixed(1)} * (0.55 + aRandom);
+          float accent = 1.0 + uPulse * (0.35 + aRandom*0.35);
+          gl_PointSize = (base * uRatio * accent) / -mv.z;
+
+          // Depth visibility (fade far)
+          vAlpha = smoothstep(650.0, 220.0, -mv.z);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform sampler2D uTexture;
+        varying float vAlpha;
+        varying float vTwinkle;
+
+        void main(){
+          vec4 tex = texture2D(uTexture, gl_PointCoord);
+          if(tex.a < 0.05) discard;
+
+          float a = tex.a * vAlpha * (0.78 + 0.22*vTwinkle);
+          vec3 col = uColor;
+
+          // Slight hot core
+          float core = smoothstep(0.9, 0.2, distance(gl_PointCoord, vec2(0.5)));
+          col += vec3(0.12) * core;
+
+          gl_FragColor = vec4(col, a);
+        }
+      `,
+      transparent:true,
+      depthWrite:false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    // --- 7. SHAPES ---
+    function setShape(name){
+      const t = geometry.attributes.target;
+
+      for(let i=0;i<SETTINGS.PARTICLE_COUNT;i++){
+        const u = i / SETTINGS.PARTICLE_COUNT;
+        let x=0,y=0,z=0;
+
+        if(name === "breath"){
+          // soft shell + pulse pockets (signature opening)
+          const radius = 90 + 35*Math.sin(u*Math.PI*2*3);
+          const theta = Math.random()*Math.PI*2;
+          const phi = Math.acos(2*Math.random()-1);
+          x = radius*Math.sin(phi)*Math.cos(theta);
+          y = radius*Math.sin(phi)*Math.sin(theta);
+          z = radius*Math.cos(phi);
+
+          // thin "rays"
+          if(Math.random() > 0.86){
+            x *= 1.35; y *= 1.35; z *= 1.35;
+          }
+        }
+        else if(name === "chaos"){
+          const r = 165 * Math.cbrt(Math.random());
+          const theta = Math.random()*Math.PI*2;
+          const phi = Math.acos(2*Math.random()-1);
+          x = r*Math.sin(phi)*Math.cos(theta);
+          y = r*Math.sin(phi)*Math.sin(theta);
+          z = r*Math.cos(phi);
+        }
+        else if(name === "wave"){
+          x = (u - 0.5) * 430;
+          z = (Math.random()-0.5) * 180;
+          y = Math.sin(x*0.018)*34 + Math.sin(z*0.055)*20 + Math.sin((x+z)*0.012)*10;
+        }
+        else if(name === "dna"){
+          const turns = 11;
+          const angle = u * Math.PI * 2 * turns;
+          const radius = 34;
+          const height = 340;
+          const strandOffset = (i % 2 === 0) ? 0.0 : Math.PI;
+
+          x = Math.cos(angle + strandOffset) * radius;
+          z = Math.sin(angle + strandOffset) * radius;
+          y = (u - 0.5) * height;
+
+          // "rungs" between strands
+          if(i % 9 === 0){
+            x *= 0.3;
+            z *= 0.3;
+          }
+          x += (Math.random()-0.5)*6;
+          z += (Math.random()-0.5)*6;
+        }
+        else if(name === "sphere"){
+          const radius = 92;
+          const theta = Math.random()*Math.PI*2;
+          const phi = Math.acos(2*Math.random()-1);
+          x = radius*Math.sin(phi)*Math.cos(theta);
+          y = radius*Math.sin(phi)*Math.sin(theta);
+          z = radius*Math.cos(phi);
+
+          // geometric aura
+          const k = Math.random();
+          if(k > 0.84){
+            const s = 1.22 + Math.random()*0.12;
+            x*=s; y*=s; z*=s;
+          }
+        }
+        else if(name === "galaxy"){
+          const arms = 3;
+          const arm = i % arms;
+          const armOffset = (Math.PI*2/arms) * arm;
+
+          const dist = Math.pow(Math.random(), 0.55); // more points outwards
+          const r = dist * 220;
+          const spin = dist * 10.5;
+
+          x = Math.cos(spin + armOffset) * r;
+          z = Math.sin(spin + armOffset) * r;
+          y = (Math.random()-0.5) * (26 * (1.0 - dist));
+
+          // bright core
+          if(Math.random() > 0.92){
+            x *= 0.25; z *= 0.25; y *= 0.25;
+          }
         }
 
-        // --- 4. THREE.JS ENGINE ---
-        const scene = new THREE.Scene();
-        // Brouillard noir pour fondre les particules au loin
-        scene.fog = new THREE.FogExp2(0x000000, 0.002);
+        t.setXYZ(i, x, y, z);
+      }
+      t.needsUpdate = true;
+    }
 
-        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.z = 150;
+    // --- 8. UI / SCENE TRANSITIONS ---
+    const chapEl = document.getElementById("chapter-el");
+    const txtEl  = document.getElementById("text-el");
+    const barEl  = document.getElementById("bar");
+    const countEl= document.getElementById("count");
 
-        const renderer = new THREE.WebGLRenderer({ powerPreference: "high-performance", antialias: false });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        // Important pour que les couleurs "claquent"
-        renderer.outputEncoding = THREE.sRGBEncoding; 
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
+    function setUI(step){
+      const data = story[step];
+      chapEl.classList.remove("visible");
+      txtEl.classList.remove("visible");
 
-        // --- 5. SYSTÈME DE PARTICULES ---
-        const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(PARTICLE_COUNT * 3);
-        const targets = new Float32Array(PARTICLE_COUNT * 3);
-        const randoms = new Float32Array(PARTICLE_COUNT);
+      // progress
+      const total = story.length;
+      const p = ((step+1)/total)*100;
+      gsap.to(barEl, { width: p + "%", duration: 1.0, ease:"power2.out" });
+      countEl.textContent = String(step+1).padStart(2,"0") + "/" + String(total).padStart(2,"0");
 
-        // Initialisation (Big Bang au centre)
-        for(let i=0; i<PARTICLE_COUNT; i++) {
-            positions[i*3] = (Math.random()-0.5) * 10;
-            positions[i*3+1] = (Math.random()-0.5) * 10;
-            positions[i*3+2] = (Math.random()-0.5) * 10;
-            randoms[i] = Math.random();
-        }
+      setTimeout(()=>{
+        chapEl.textContent = data.chapter;
+        txtEl.innerHTML = data.text;
+        chapEl.classList.add("visible");
+        txtEl.classList.add("visible");
+      }, 420);
+    }
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('target', new THREE.BufferAttribute(targets, 3));
-        geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
+    // Cinematic accent pulse
+    function pulseAccent(){
+      material.uniforms.uPulse.value = 0.0;
+      gsap.to(material.uniforms.uPulse, { value: 1.0, duration: 0.25, ease:"power2.out" });
+      gsap.to(material.uniforms.uPulse, { value: 0.0, duration: 1.1, delay: 0.18, ease:"power3.out" });
+    }
 
-        // SHADER PERSONNALISÉ "NEON"
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                uTime: { value: 0 },
-                uColor: { value: new THREE.Color(1, 1, 1) },
-                uTexture: { value: createSupernovaTexture() },
-                uRatio: { value: renderer.getPixelRatio() }
-            },
-            vertexShader: `
-                uniform float uTime;
-                uniform float uRatio;
-                attribute vec3 target;
-                attribute float aRandom;
-                varying float vAlpha;
+    // --- 9. CAMERA CHOREOGRAPHY + PARALLAX ---
+    let targetCam = { radius: SETTINGS.CAMERA_RADIUS, lift: 0, drift: 0.10 };
+    let pointer = { x:0, y:0 };
+    let camAngle = 0;
 
-                void main() {
-                    vec3 pos = position; // Position interpolée par le JS
+    function applySceneCamera(cam){
+      targetCam = { ...targetCam, ...cam };
+    }
 
-                    // Animation "VIVANTE" (Respiration complexe)
-                    float movement = sin(uTime * 2.0 + aRandom * 20.0) * 2.0;
-                    pos += normalize(pos) * movement;
+    function nextSlide(){
+      currentStep++;
+      if(currentStep >= story.length) currentStep = 0;
 
-                    // Orbite légère pour tout le monde
-                    float angle = uTime * 0.1 * (aRandom - 0.5);
-                    float ca = cos(angle); float sa = sin(angle);
-                    // Rotation X
-                    // pos.yz = mat2(ca, -sa, sa, ca) * pos.yz; 
+      const data = story[currentStep];
+      setShape(data.shape);
 
-                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-                    gl_Position = projectionMatrix * mvPosition;
+      // Color shift
+      gsap.to(material.uniforms.uColor.value, {
+        r: data.color.r, g: data.color.g, b: data.color.b,
+        duration: 1.8, ease:"power2.out"
+      });
 
-                    // TAILLE DYNAMIQUE (LE POINT CLÉ)
-                    // Plus c'est proche, plus c'est énorme
-                    // aRandom fait varier la taille pour donner de la profondeur
-                    float size = ${PARTICLE_SIZE.toFixed(1)} * (0.5 + aRandom);
-                    gl_PointSize = (size * uRatio) / -mvPosition.z;
+      // Exposure feels like a "cut"
+      gsap.fromTo(renderer, { toneMappingExposure: 1.45 }, { toneMappingExposure: 1.25, duration: 1.2, ease:"power2.out" });
 
-                    // Visibilité distance
-                    vAlpha = smoothstep(500.0, 300.0, -mvPosition.z);
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 uColor;
-                uniform sampler2D uTexture;
-                varying float vAlpha;
+      // Camera target
+      applySceneCamera(data.cam);
 
-                void main() {
-                    vec4 tex = texture2D(uTexture, gl_PointCoord);
-                    
-                    // Si le pixel est noir dans la texture, on ne le dessine pas (perf)
-                    if (tex.a < 0.05) discard;
+      // UI
+      setUI(currentStep);
 
-                    // Couleur intense + transparence de la texture
-                    gl_FragColor = vec4(uColor, tex.a * vAlpha);
-                }
-            `,
-            transparent: true,
-            depthWrite: false,
-            // ADDITIVE BLENDING : C'est ça qui fait l'effet "Lumière/Laser"
-            blending: THREE.AdditiveBlending 
-        });
+      // Audio accent
+      chime();
+      pulseAccent();
+    }
 
-        const particles = new THREE.Points(geometry, material);
-        scene.add(particles);
+    // --- 10. ANIMATION LOOP ---
+    const clock = new THREE.Clock();
 
-        // --- 6. CALCUL DES FORMES (MATHS) ---
-        function setShape(shapeName) {
-            const targetAttr = geometry.attributes.target;
-            
-            for(let i=0; i<PARTICLE_COUNT; i++) {
-                const u = i / PARTICLE_COUNT; // 0 à 1
-                let x, y, z;
+    function animate(){
+      if(!isRunning) return;
+      requestAnimationFrame(animate);
 
-                if (shapeName === 'chaos') {
-                    // Explosion Sphérique
-                    const r = 150 * Math.cbrt(Math.random()); // Distribution uniforme dans sphère
-                    const theta = Math.random() * Math.PI * 2;
-                    const phi = Math.acos(2 * Math.random() - 1);
-                    x = r * Math.sin(phi) * Math.cos(theta);
-                    y = r * Math.sin(phi) * Math.sin(theta);
-                    z = r * Math.cos(phi);
-                } 
-                else if (shapeName === 'wave') {
-                    // Vague Océanique
-                    x = (u - 0.5) * 400;
-                    z = (Math.random() - 0.5) * 150;
-                    // Onde sinusoïdale complexe
-                    y = Math.sin(x * 0.02) * 30 + Math.sin(z * 0.05) * 20;
-                }
-                else if (shapeName === 'dna') {
-                    // Double Hélice géante
-                    const turns = 10;
-                    const angle = u * Math.PI * 2 * turns;
-                    const radius = 30;
-                    const height = 300;
-                    
-                    // On sépare en deux brins
-                    const strandOffset = (i % 2 === 0) ? 0 : Math.PI;
-                    
-                    x = Math.cos(angle + strandOffset) * radius;
-                    z = Math.sin(angle + strandOffset) * radius;
-                    y = (u - 0.5) * height;
-                    
-                    // Ajout de bruit pour faire "organique"
-                    x += (Math.random()-0.5) * 5;
-                    z += (Math.random()-0.5) * 5;
-                }
-                else if (shapeName === 'sphere') {
-                    // Sphère creuse (Cristal)
-                    const radius = 80;
-                    const theta = Math.random() * Math.PI * 2;
-                    const phi = Math.acos(2 * Math.random() - 1);
-                    
-                    x = radius * Math.sin(phi) * Math.cos(theta);
-                    y = radius * Math.sin(phi) * Math.sin(theta);
-                    z = radius * Math.cos(phi);
-                    
-                    // Structure géométrique (lignes)
-                    if (Math.random() > 0.8) {
-                        x *= 1.2; y *= 1.2; z *= 1.2; // Aura externe
-                    }
-                }
-                else if (shapeName === 'galaxy') {
-                    // Spirale Galactique
-                    const arms = 3;
-                    const armIndex = i % arms;
-                    const armOffset = (Math.PI * 2 / arms) * armIndex;
-                    const distance = Math.random(); // 0 centre, 1 bord
-                    const spiralAngle = distance * 10;
-                    
-                    const r = distance * 200;
-                    x = Math.cos(spiralAngle + armOffset) * r;
-                    z = Math.sin(spiralAngle + armOffset) * r;
-                    y = (Math.random() - 0.5) * (20 * (1-distance)); // Plus plat au bord
-                }
+      const dt = Math.min(clock.getDelta(), 0.033);
+      const time = clock.getElapsedTime();
 
-                targetAttr.setXYZ(i, x, y, z);
-            }
-            targetAttr.needsUpdate = true;
-        }
+      material.uniforms.uTime.value = time;
 
-        // --- 7. NAVIGATION ---
-        function nextSlide() {
-            currentStep++;
-            if (currentStep >= story.length) currentStep = 0; // Boucle
+      // Morphing (CPU lerp)
+      const pos = geometry.attributes.position;
+      const tar = geometry.attributes.target;
 
-            const data = story[currentStep];
+      const sceneSpeed = story[Math.max(0,currentStep)]?.speed ?? 1.0;
+      const lerp = SETTINGS.SPEED_LERP * sceneSpeed * dt;
 
-            // 1. Calculer la forme
-            setShape(data.shape);
+      for(let i=0;i<SETTINGS.PARTICLE_COUNT;i++){
+        const ix=i*3, iy=ix+1, iz=ix+2;
+        pos.array[ix] += (tar.array[ix] - pos.array[ix]) * lerp;
+        pos.array[iy] += (tar.array[iy] - pos.array[iy]) * lerp;
+        pos.array[iz] += (tar.array[iz] - pos.array[iz]) * lerp;
+      }
+      pos.needsUpdate = true;
 
-            // 2. Changer la couleur
-            gsap.to(material.uniforms.uColor.value, {
-                r: data.color.r, g: data.color.g, b: data.color.b,
-                duration: 2.0
-            });
+      // Camera orbit + parallax (pointer)
+      camAngle += dt * targetCam.drift;
+      const px = pointer.x * SETTINGS.PARALLAX;
+      const py = pointer.y * SETTINGS.PARALLAX;
 
-            // 3. Texte UI
-            const chapEl = document.getElementById('chapter-el');
-            const txtEl = document.getElementById('text-el');
-            
-            // Fade out
-            txtEl.classList.remove('visible');
-            
-            setTimeout(() => {
-                chapEl.innerText = data.chapter;
-                txtEl.innerHTML = data.text;
-                txtEl.classList.add('visible');
-            }, 500);
-        }
+      camera.position.x = Math.sin(camAngle) * targetCam.radius + px * 60;
+      camera.position.z = Math.cos(camAngle) * targetCam.radius + px * 20;
+      camera.position.y = targetCam.lift + py * 40;
 
-        // --- 8. BOUCLE D'ANIMATION (Le Cœur) ---
-        const clock = new THREE.Clock();
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            const dt = clock.getDelta();
-            const time = clock.getElapsedTime();
+      camera.lookAt(px * 18, py * 18, 0);
 
-            material.uniforms.uTime.value = time;
+      // Subtle scene rotation
+      particles.rotation.y = time * 0.03;
+      particles.rotation.x = Math.sin(time * 0.12) * 0.06;
 
-            // MORPHING FLUIDE (Interpolation linéaire)
-            // On déplace chaque particule vers sa cible petit à petit
-            const positions = geometry.attributes.position;
-            const targets = geometry.attributes.target;
-            // Vitesse de transition
-            const speed = 2.0 * dt; 
+      renderer.render(scene, camera);
+    }
 
-            for(let i=0; i<PARTICLE_COUNT; i++) {
-                const ix = i*3;
-                const iy = i*3+1;
-                const iz = i*3+2;
+    // --- 11. INPUT (tap / keyboard / pointer) ---
+    const introDiv = document.getElementById("intro");
 
-                positions.array[ix] += (targets.array[ix] - positions.array[ix]) * speed;
-                positions.array[iy] += (targets.array[iy] - positions.array[iy]) * speed;
-                positions.array[iz] += (targets.array[iz] - positions.array[iz]) * speed;
-            }
-            positions.needsUpdate = true;
+    function start(){
+      if(isRunning) return;
+      isRunning = true;
 
-            // Rotation Caméra (Cinématique)
-            // Rotation lente autour du centre
-            const camSpeed = 0.1;
-            camera.position.x = Math.sin(time * camSpeed) * 150;
-            camera.position.z = Math.cos(time * camSpeed) * 150;
-            camera.lookAt(0, 0, 0);
+      // audio start requires user gesture
+      if(SETTINGS.SOUND_ON){
+        initAudio();
+        audioCtx.resume?.();
+        setMute(false);
+      }
 
-            renderer.render(scene, camera);
-        }
+      // fade intro
+      introDiv.style.opacity = "0";
+      setTimeout(()=> introDiv.style.display = "none", 950);
 
-        // --- 9. INTERACTION ---
-        const introDiv = document.getElementById('intro');
-        
-        // Clic n'importe où
-        document.body.addEventListener('click', () => {
-            if (introDiv.style.opacity !== '0') {
-                // Premier clic : Démarrer
-                introDiv.style.opacity = '0';
-                setTimeout(() => introDiv.style.display = 'none', 1000);
-                nextSlide();
-                animate();
-            } else {
-                // Clics suivants : Changer de scène
-                nextSlide();
-            }
-        });
+      // first scene
+      nextSlide();
+      animate();
+    }
 
-        // Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            material.uniforms.uRatio.value = renderer.getPixelRatio();
-        });
+    function step(){
+      if(!isRunning) return;
+      nextSlide();
+    }
 
-    </script>
+    // Tap / click
+    document.body.addEventListener("click", () => {
+      if(introDiv.style.display !== "none") start();
+      else step();
+    });
+
+    // Pointer parallax
+    window.addEventListener("pointermove", (e) => {
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      pointer.x = x;
+      pointer.y = -y;
+    }, { passive:true });
+
+    // Keyboard
+    window.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+      if(k === " " || k === "enter") {
+        if(introDiv.style.display !== "none") start(); else step();
+      }
+      if(k === "r") replay();
+      if(k === "m") toggleSound();
+      if(k === "q") toggleQuality();
+    });
+
+    // --- 12. BUTTONS ---
+    document.getElementById("btn-replay").addEventListener("click", (e) => { e.stopPropagation(); replay(); });
+    document.getElementById("btn-sound").addEventListener("click", (e) => { e.stopPropagation(); toggleSound(); });
+    document.getElementById("btn-quality").addEventListener("click", (e) => { e.stopPropagation(); toggleQuality(); });
+
+    function replay(){
+      currentStep = -1;
+      // quick "fade to black" illusion by exposure dip
+      gsap.to(renderer, { toneMappingExposure: 0.85, duration: 0.25, ease:"power2.in" });
+      setTimeout(()=>{
+        gsap.to(renderer, { toneMappingExposure: 1.25, duration: 0.9, ease:"power2.out" });
+        nextSlide();
+      }, 220);
+    }
+
+    function toggleSound(){
+      SETTINGS.SOUND_ON = !SETTINGS.SOUND_ON;
+      const btn = document.getElementById("btn-sound");
+      if(SETTINGS.SOUND_ON){
+        initAudio();
+        audioCtx.resume?.();
+        setMute(false);
+        btn.innerHTML = "🔊 <span>Son</span> <kbd>M</kbd>";
+      }else{
+        setMute(true);
+        btn.innerHTML = "🔇 <span>Son</span> <kbd>M</kbd>";
+      }
+    }
+
+    function toggleQuality(){
+      SETTINGS.USE_HIGH_QUALITY = !SETTINGS.USE_HIGH_QUALITY;
+      const btn = document.getElementById("btn-quality");
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, SETTINGS.USE_HIGH_QUALITY ? SETTINGS.DPR_HIGH : SETTINGS.DPR_LOW));
+      material.uniforms.uRatio.value = renderer.getPixelRatio();
+      btn.innerHTML = SETTINGS.USE_HIGH_QUALITY
+        ? "✨ <span>Qualité</span> <kbd>Q</kbd>"
+        : "⚡ <span>Qualité</span> <kbd>Q</kbd>";
+    }
+
+    // --- 13. RESIZE ---
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      material.uniforms.uRatio.value = renderer.getPixelRatio();
+    });
+
+    // --- 14. PRELOAD UI STATE ---
+    chapEl.textContent = "";
+    txtEl.innerHTML = "";
+    document.getElementById("bar").style.width = "0%";
+    document.getElementById("count").textContent = "00/" + String(story.length).padStart(2,"0");
+  </script>
 </body>
 </html>
