@@ -1,791 +1,421 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>L’Atelier des Particules — WJSBUTLER & CO (GPGPU Fluid)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>L’Atelier - UNIVERSAL EDITION</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600&display=swap');
-    :root{
-      --ink: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.55);
-      --stroke: rgba(255,255,255,.10);
-      --glass: rgba(8,10,14,.55);
-      --glass2: rgba(8,10,14,.22);
-      --shadow: 0 30px 80px rgba(0,0,0,.65);
-      --gold: #ffaa00;
-    }
-    html,body{height:100%;}
-    body{
-      margin:0; overflow:hidden; background:#000;
-      font-family:Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      color:var(--ink);
-    }
-    #c{position:absolute; inset:0;}
 
-    #overlay{
-      position:absolute; inset:0; z-index:10;
-      display:flex; align-items:center; justify-content:center;
-      background: radial-gradient(ellipse at center, rgba(0,170,255,.09) 0%, rgba(0,0,0,1) 58%), #000;
-      cursor:pointer; user-select:none;
-      transition: opacity .9s ease;
-    }
-    .intro{ text-align:center; padding:24px; width:min(980px,92%); }
-    .intro h1{
-      margin:0 0 12px;
-      font-family:Cinzel,serif;
-      font-size:clamp(2.0rem,8vw,4.2rem);
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      text-shadow:0 0 60px rgba(0,170,255,.28), 0 0 22px rgba(255,255,255,.12);
-    }
-    .intro .sub{
-      font-size:.88rem; letter-spacing:.36em; text-transform:uppercase;
-      color:var(--muted); margin-bottom:18px;
-    }
-    .intro .warn{
-      margin:16px auto 0;
-      max-width: 860px;
-      font-size:.82rem; line-height:1.35;
-      color:rgba(255,255,255,.58);
-      border:1px solid rgba(255,255,255,.10);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      padding:14px 16px;
-      border-radius:18px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-    .intro .tap{
-      margin-top:18px;
-      font-size:.72rem; letter-spacing:.32em; text-transform:uppercase;
-      color:rgba(255,255,255,.48);
-      display:inline-flex; align-items:center; gap:10px;
-      animation:pulse 1.6s ease-in-out infinite;
-    }
-    .dot{width:9px;height:9px;border-radius:999px;background:var(--gold); box-shadow:0 0 18px rgba(255,170,0,.9);}
-    @keyframes pulse{0%,100%{opacity:.55; transform:translateY(0);}50%{opacity:1; transform:translateY(-2px);} }
+    body { margin: 0; overflow: hidden; background: #000; font-family: 'Montserrat', sans-serif; color: white; -webkit-tap-highlight-color: transparent; }
+    
+    #c { position: absolute; inset: 0; z-index: 1; }
 
-    #hud{
-      position:absolute; left:18px; right:18px; top:16px; z-index:20;
-      display:flex; justify-content:space-between; gap:12px; pointer-events:none;
+    /* UI OVERLAY */
+    #intro {
+      position: absolute; inset: 0; z-index: 50;
+      background: radial-gradient(circle, #1a1a2e 0%, #000 100%);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: opacity 1s; cursor: pointer;
     }
-    .badge, .controls{
-      pointer-events:auto;
-      display:flex; align-items:center; gap:10px;
-      padding:10px 14px;
-      border-radius:999px;
-      background: linear-gradient(180deg, var(--glass), var(--glass2));
-      border:1px solid var(--stroke);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+    
+    h1 {
+      font-family: 'Cinzel', serif; font-size: clamp(2rem, 8vw, 4rem); text-align: center;
+      text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 20px 0;
+      text-shadow: 0 0 30px rgba(0,150,255,0.5);
     }
-    .brand{
-      font-family:Cinzel,serif;
-      letter-spacing:.22em;
-      text-transform:uppercase;
-      font-size:.72rem;
-      color:rgba(255,255,255,.88);
-      white-space:nowrap;
+    
+    .tap-hint {
+      padding: 15px 30px; border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
+      text-transform: uppercase; letter-spacing: 3px; font-size: 0.8rem;
+      animation: pulse 1.5s infinite; background: rgba(0,0,0,0.3);
     }
-    .subbrand{
-      font-size:.72rem;
-      color:rgba(255,255,255,.55);
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-    .btn{
-      pointer-events:auto;
-      border:1px solid rgba(255,255,255,.12);
-      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
-      color:rgba(255,255,255,.86);
-      padding:9px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      user-select:none;
-      font-size:.82rem;
-    }
-    .btn:active{transform: translateY(1px);}
+    @keyframes pulse { 0%{opacity:0.5} 50%{opacity:1} 100%{opacity:0.5} }
 
-    #caption{
-      position:absolute; left:0; right:0; bottom:0; z-index:20;
-      height:42%;
-      display:flex; align-items:flex-end; justify-content:center;
-      padding:0 18px 42px;
-      pointer-events:none;
-      background: linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.60) 35%, rgba(0,0,0,0) 100%);
+    /* UI NARRATION */
+    #ui-layer {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; z-index: 10;
+      pointer-events: none; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+      padding-bottom: 40px; opacity: 0; transition: opacity 1.5s;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
     }
-    .card{
-      width:min(980px,96%);
-      border-radius:22px;
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding:18px 18px 14px;
+    
+    .chapter { font-family: 'Cinzel', serif; color: #888; font-size: 0.7rem; letter-spacing: 4px; margin-bottom: 10px; }
+    
+    .text {
+      font-family: 'Cinzel', serif; font-size: clamp(1.2rem, 5vw, 2rem); text-align: center;
+      max-width: 90%; line-height: 1.3; text-shadow: 0 4px 20px black;
     }
-    .chapter{
-      font-family:Cinzel,serif;
-      letter-spacing:.42em;
-      text-transform:uppercase;
-      font-size:.70rem;
-      color:rgba(255,255,255,.55);
-      margin:0 0 10px;
+    .hl { color: #ffaa00; text-shadow: 0 0 20px #ffaa00; }
+
+    /* DEBUGGER VISUEL */
+    #error-log {
+      position: absolute; top: 0; left: 0; width: 100%; background: rgba(50,0,0,0.9);
+      color: #ffaaaa; padding: 10px; font-family: monospace; font-size: 10px;
+      z-index: 100; display: none; pointer-events: none; white-space: pre-wrap;
     }
-    .line{
-      font-family:Cinzel,serif;
-      font-size:clamp(1.25rem,4.8vw,2.25rem);
-      line-height:1.25;
-      text-align:center;
-      margin:0;
-      text-shadow:0 0 28px rgba(255,255,255,.20);
-    }
-    .hl{color:var(--gold); text-shadow:0 0 28px rgba(255,170,0,.55);}
-    .meta{
-      margin-top:12px;
-      display:flex; justify-content:space-between; align-items:center; gap:10px;
-      font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
-      color:rgba(255,255,255,.48);
-    }
-    .barwrap{width:190px;height:4px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;}
-    .bar{height:100%;width:0%; background: linear-gradient(90deg, rgba(255,170,0,.2), rgba(255,170,0,.95), rgba(0,170,255,.55)); filter: drop-shadow(0 0 12px rgba(255,170,0,.55));}
-    @media (max-width:520px){ .barwrap{width:120px;} .btn span{display:none;} }
   </style>
 </head>
 <body>
+
+  <div id="error-log"></div>
+
+  <div id="intro">
+    <h1>L'ATELIER<br>INFINI</h1>
+    <div class="tap-hint">Touchez l'écran</div>
+    <div id="loading-state" style="margin-top:10px; font-size:10px; color:#666">Chargement des librairies...</div>
+  </div>
+
+  <div id="ui-layer">
+    <div id="chap" class="chapter"></div>
+    <div id="txt" class="text"></div>
+  </div>
+
   <canvas id="c"></canvas>
 
-  <div id="hud">
-    <div class="badge">
-      <div>
-        <div class="brand">WJSBUTLER & CO</div>
-        <div class="subbrand">Hospitalité cinématique — GPGPU</div>
-      </div>
-    </div>
-    <div class="controls">
-      <button id="btnQuality" class="btn">⚡ <span>Qualité</span></button>
-      <button id="btnBloom" class="btn">✨ <span>Bloom</span></button>
-      <button id="btnReplay" class="btn">⟲ <span>Rejouer</span></button>
-    </div>
-  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/misc/GPUComputationRenderer.js"></script>
 
-  <div id="caption">
-    <div class="card">
-      <div id="chap" class="chapter">I. L’OUVERTURE</div>
-      <p id="txt" class="line">Ici, tout commence par une <span class="hl">respiration</span>.</p>
-      <div class="meta">
-        <div>Tap / Espace : scène suivante</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="barwrap"><div id="bar" class="bar"></div></div>
-          <div id="count">01/06</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="overlay">
-    <div class="intro">
-      <h1>L’Atelier<br/>des Particules</h1>
-      <div class="sub">Simulation GPGPU — Curl Noise — Post cinéma</div>
-      <div class="warn" id="warnBox">
-        <b>Attention :</b> version “blockbuster”. GPU très sollicité (compute + bloom).<br/>
-        Utilise <b>Qualité</b> si ton appareil chauffe/rame.
-      </div>
-      <div class="tap"><span class="dot"></span> Touchez pour démarrer</div>
-    </div>
-  </div>
-
-  <script type="module">
-    // If something fails early, we surface it in the overlay instead of “dead clicks”.
-    const warnBox = document.getElementById("warnBox");
-    window.addEventListener("error", (e) => {
-      warnBox.innerHTML = "<b>Erreur JS :</b> " + (e.message || "inconnue") + "<br/>Ouvre la console pour le détail.";
-    });
-
-    import * as THREE from "https://unpkg.com/three@0.128.0/build/three.module.js";
-    import { GPUComputationRenderer } from "https://unpkg.com/three@0.128.0/examples/jsm/misc/GPUComputationRenderer.js";
-    import { EffectComposer } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js";
-    import { RenderPass } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/RenderPass.js";
-    import { ShaderPass } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/ShaderPass.js";
-    import { UnrealBloomPass } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js";
-    import { FilmPass } from "https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/FilmPass.js";
-
-    const SETTINGS = {
-      SIZE: 192, // 36864 particules
-      BOUNDS: 220,
-      CAMERA_RADIUS: 190,
-      DAMPING: 0.985,
-      NOISE_SCALE: 0.0105,
-      NOISE_SPEED: 0.22,
-      CURL_STRENGTH: 2.25,
-      ATTRACT_STRENGTH: 0.08,
-      TARGET_BLEND: 0.035,
-      POINT_SIZE: 160.0,
-      EXPOSURE: 1.22,
-      DPR_HIGH: 2.0,
-      DPR_LOW: 1.0,
-      useHighQuality: true,
-      bloomOn: true,
-      bloomStrength: 1.35,
-      bloomRadius: 0.45,
-      bloomThreshold: 0.18,
-      rgbShift: 0.0018,
-      grainIntensity: 0.22
+  <script>
+    // --- GESTION DES ERREURS ---
+    window.onerror = function(msg, source, lineno, colno, error) {
+        document.getElementById('error-log').style.display = 'block';
+        document.getElementById('error-log').innerText += "ERREUR: " + msg + "\n";
     };
 
+    const loadingState = document.getElementById('loading-state');
+    loadingState.innerText = "Initialisation Moteur...";
+
+    // --- CONFIGURATION ---
+    const SETTINGS = {
+        SIZE: 128, // 16384 particules (Fluide sur iPhone)
+        BLOOM: 1.5
+    };
+    const PARTICLES = SETTINGS.SIZE * SETTINGS.SIZE;
+
+    // --- SCENARIO ---
     const story = [
-      { chap:"I. L’OUVERTURE", txt:`Ici, tout commence par une <span class="hl">respiration</span>.`, color: new THREE.Color(1.0,0.78,0.25), target:"breath" },
-      { chap:"II. LA MATIÈRE", txt:`Une idée est une <span class="hl">étincelle</span> dans le noir.`, color: new THREE.Color(1.0,0.60,0.12), target:"burst" },
-      { chap:"III. L’ÉMOTION", txt:`L’émotion est une <span class="hl" style="color:#00aaff;text-shadow:0 0 28px #00aaff">vague</span> qui nous emporte.`, color: new THREE.Color(0.12,0.52,1.0), target:"wave" },
-      { chap:"IV. LA CONNEXION", txt:`L’empathie tisse des <span class="hl" style="color:#ff0055;text-shadow:0 0 28px #ff0055">liens</span> invisibles.`, color: new THREE.Color(1.0,0.10,0.45), target:"dna" },
-      { chap:"V. L’ŒUVRE", txt:`Le chaos devient <span class="hl" style="color:#00ff88;text-shadow:0 0 28px #00ff88">structure</span>.`, color: new THREE.Color(0.20,1.0,0.62), target:"sphere" },
-      { chap:"VI. L’EMPREINTE", txt:`Et l’instant devient <span class="hl" style="color:#c7a2ff;text-shadow:0 0 28px #c7a2ff">mémoire</span>.`, color: new THREE.Color(0.78,0.55,1.0), target:"galaxy" }
+        { chap: "I. LA MATIÈRE", txt: "Une idée est une <span class='hl'>étincelle</span>.", color: new THREE.Color(1.0, 0.6, 0.1), shape: "chaos" },
+        { chap: "II. L'ÉMOTION", txt: "C'est une <span class='hl' style='color:#00aaff'>vague</span> qui emporte tout.", color: new THREE.Color(0.1, 0.5, 1.0), shape: "wave" },
+        { chap: "III. LA CONNEXION", txt: "L'empathie tisse des <span class='hl' style='color:#ff0055'>liens</span>.", color: new THREE.Color(1.0, 0.1, 0.5), shape: "dna" },
+        { chap: "IV. L'ŒUVRE", txt: "Le chaos devient <span class='hl' style='color:#00ff88'>structure</span>.", color: new THREE.Color(0.2, 1.0, 0.6), shape: "sphere" },
+        { chap: "V. INFINI", txt: "Tu es le centre de ce monde.", color: new THREE.Color(0.8, 0.5, 1.0), shape: "galaxy" }
     ];
-    let step = 0;
+    let currentStep = 0;
 
-    const chapEl = document.getElementById("chap");
-    const txtEl  = document.getElementById("txt");
-    const barEl  = document.getElementById("bar");
-    const countEl= document.getElementById("count");
-    function setUI(i){
-      chapEl.textContent = story[i].chap;
-      txtEl.innerHTML = story[i].txt;
-      barEl.style.width = ((i+1)/story.length*100).toFixed(2) + "%";
-      countEl.textContent = String(i+1).padStart(2,"0") + "/" + String(story.length).padStart(2,"0");
-    }
-
-    const canvas = document.getElementById("c");
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, alpha:false, powerPreference:"high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, SETTINGS.useHighQuality ? SETTINGS.DPR_HIGH : SETTINGS.DPR_LOW));
+    // --- THREE.JS SETUP ---
+    const canvas = document.querySelector('#c');
+    const renderer = new THREE.WebGLRenderer({canvas, powerPreference: "high-performance", antialias: false});
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = SETTINGS.EXPOSURE;
-
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x000000, 0.0019);
+    scene.fog = new THREE.FogExp2(0x000000, 0.005);
+    
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.z = 120;
 
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 3000);
-    camera.position.set(0, 0, SETTINGS.CAMERA_RADIUS);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.12));
-
-    const pointer = new THREE.Vector2(0,0);
-    window.addEventListener("pointermove", (e)=>{
-      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
-    }, { passive:true });
-
-    // --- GPGPU
-    const SIZE = SETTINGS.SIZE;
-    const PARTICLES = SIZE * SIZE;
-
-    const gpuCompute = new GPUComputationRenderer(SIZE, SIZE, renderer);
-    gpuCompute.setDataType(THREE.HalfFloatType);
-
-    const dtPosition = gpuCompute.createTexture();
-    const dtVelocity = gpuCompute.createTexture();
-    const dtTarget   = gpuCompute.createTexture();
-
-    function fillPosition(texture){
-      const data = texture.image.data;
-      for(let i=0;i<data.length;i+=4){
-        data[i+0] = (Math.random()*2-1) * 8;
-        data[i+1] = (Math.random()*2-1) * 8;
-        data[i+2] = (Math.random()*2-1) * 8;
-        data[i+3] = 1;
-      }
-    }
-    function fillVelocity(texture){
-      const data = texture.image.data;
-      for(let i=0;i<data.length;i+=4){
-        data[i+0] = (Math.random()*2-1) * 0.1;
-        data[i+1] = (Math.random()*2-1) * 0.1;
-        data[i+2] = (Math.random()*2-1) * 0.1;
-        data[i+3] = 1;
-      }
-    }
-    fillPosition(dtPosition);
-    fillVelocity(dtVelocity);
-
-    function writeTargetShape(name){
-      const data = dtTarget.image.data;
-      const N = PARTICLES;
-
-      for(let p=0;p<N;p++){
-        const u = p / N;
-        let x=0,y=0,z=0;
-
-        if(name==="breath"){
-          const radius = 95 + 35*Math.sin(u*Math.PI*2*3);
-          const theta = Math.random()*Math.PI*2;
-          const phi = Math.acos(2*Math.random()-1);
-          x = radius*Math.sin(phi)*Math.cos(theta);
-          y = radius*Math.sin(phi)*Math.sin(theta);
-          z = radius*Math.cos(phi);
-          if(Math.random()>0.86){ x*=1.35; y*=1.35; z*=1.35; }
-        } else if(name==="burst"){
-          const r = 170 * Math.cbrt(Math.random());
-          const theta = Math.random()*Math.PI*2;
-          const phi = Math.acos(2*Math.random()-1);
-          x = r*Math.sin(phi)*Math.cos(theta);
-          y = r*Math.sin(phi)*Math.sin(theta);
-          z = r*Math.cos(phi);
-        } else if(name==="wave"){
-          x = (u - 0.5) * 430;
-          z = (Math.random()-0.5) * 180;
-          y = Math.sin(x*0.018)*34 + Math.sin(z*0.055)*20 + Math.sin((x+z)*0.012)*10;
-        } else if(name==="dna"){
-          const turns = 11;
-          const angle = u * Math.PI * 2 * turns;
-          const radius = 34;
-          const height = 340;
-          const strandOffset = (p % 2 === 0) ? 0.0 : Math.PI;
-          x = Math.cos(angle + strandOffset)*radius;
-          z = Math.sin(angle + strandOffset)*radius;
-          y = (u - 0.5)*height;
-          if(p % 9 === 0){ x*=0.3; z*=0.3; }
-          x += (Math.random()-0.5)*6;
-          z += (Math.random()-0.5)*6;
-        } else if(name==="sphere"){
-          const radius = 92;
-          const theta = Math.random()*Math.PI*2;
-          const phi = Math.acos(2*Math.random()-1);
-          x = radius*Math.sin(phi)*Math.cos(theta);
-          y = radius*Math.sin(phi)*Math.sin(theta);
-          z = radius*Math.cos(phi);
-          if(Math.random()>0.84){
-            const s = 1.22 + Math.random()*0.12;
-            x*=s; y*=s; z*=s;
-          }
-        } else if(name==="galaxy"){
-          const arms = 3;
-          const arm = p % arms;
-          const armOffset = (Math.PI*2/arms)*arm;
-          const dist = Math.pow(Math.random(), 0.55);
-          const r = dist * 220;
-          const spin = dist * 10.5;
-          x = Math.cos(spin + armOffset)*r;
-          z = Math.sin(spin + armOffset)*r;
-          y = (Math.random()-0.5) * (26*(1.0 - dist));
-          if(Math.random()>0.92){ x*=0.25; z*=0.25; y*=0.25; }
+    // --- GPGPU (PHYSICS) ---
+    let gpuCompute, velVar, posVar;
+    
+    function initGPGPU() {
+        gpuCompute = new THREE.GPUComputationRenderer(SETTINGS.SIZE, SETTINGS.SIZE, renderer);
+        
+        // Si pas de float texture (iPhone parfois), fallback
+        if (!renderer.capabilities.isWebGL2) {
+            gpuCompute.setDataType(THREE.HalfFloatType);
         }
 
-        const i = p * 4;
-        data[i+0]=x; data[i+1]=y; data[i+2]=z; data[i+3]=1;
-      }
-      dtTarget.needsUpdate = true;
-    }
-    writeTargetShape(story[0].target);
+        const dtPos = gpuCompute.createTexture();
+        const dtVel = gpuCompute.createTexture();
+        const dtTarget = gpuCompute.createTexture();
 
-    const velocityShader = /* glsl */`
-      uniform float uTime;
-      uniform float uDelta;
-      uniform float uDamping;
-      uniform float uBounds;
+        fillTextures(dtPos, dtVel, dtTarget);
 
-      uniform float uNoiseScale;
-      uniform float uNoiseSpeed;
-      uniform float uCurlStrength;
+        // SHADER VELOCITY (MOUVEMENT)
+        const velShader = `
+            uniform float uTime;
+            uniform sampler2D texturePosition;
+            uniform sampler2D textureTarget;
+            
+            // Noise simple
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+            vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+            float snoise(vec3 v) { const vec2 C = vec2(1.0/6.0, 1.0/3.0); const vec4 D = vec4(0.0, 0.5, 1.0, 2.0); vec3 i = floor(v + dot(v, C.yyy)); vec3 x0 = v - i + dot(i, C.xxx); vec3 g = step(x0.yzx, x0.xyz); vec3 l = 1.0 - g; vec3 i1 = min(g.xyz, l.zxy); vec3 i2 = max(g.xyz, l.zxy); vec3 x1 = x0 - i1 + C.xxx; vec3 x2 = x0 - i2 + C.yyy; vec3 x3 = x0 - D.yyy; i = mod289(i); vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0)); float n_ = 0.142857142857; vec3 ns = n_ * D.wyz - D.xzx; vec4 j = p - 49.0 * floor(p * ns.z * ns.z); vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_); vec4 x = x_ *ns.x + ns.yyyy; vec4 y = y_ *ns.x + ns.yyyy; vec4 h = 1.0 - abs(x) - abs(y); vec4 b0 = vec4(x.xy, y.xy); vec4 b1 = vec4(x.zw, y.zw); vec4 s0 = floor(b0)*2.0 + 1.0; vec4 s1 = floor(b1)*2.0 + 1.0; vec4 sh = -step(h, vec4(0.0)); vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww; vec3 p0 = vec3(a0.xy, h.x); vec3 p1 = vec3(a0.zw, h.y); vec3 p2 = vec3(a1.xy, h.z); vec3 p3 = vec3(a1.zw, h.w); vec4 norm = taylorInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3))); p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w; vec4 m = max(0.6 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0); m = m * m; return 42.0 * dot(m*m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3))); }
+            
+            void main() {
+                vec2 uv = gl_FragCoord.xy / resolution.xy;
+                vec3 pos = texture2D(texturePosition, uv).xyz;
+                vec3 vel = texture2D(textureVelocity, uv).xyz;
+                vec3 tgt = texture2D(textureTarget, uv).xyz;
 
-      uniform float uAttractStrength;
-      uniform float uTargetBlend;
+                // Attraction vers la cible
+                vec3 force = (tgt - pos) * 0.02; // Force d'attraction
+                
+                // Turbulence (Curl Noise)
+                float n = snoise(pos * 0.02 + uTime * 0.5);
+                vec3 noiseVec = vec3(n, snoise(pos*0.02 + vec3(10.0)), snoise(pos*0.02 + vec3(20.0)));
+                
+                vel += force;
+                vel += noiseVec * 0.05; // Turbulence
+                vel *= 0.96; // Friction
 
-      uniform sampler2D texturePosition;
-      uniform sampler2D textureVelocity;
-      uniform sampler2D textureTarget;
+                gl_FragColor = vec4(vel, 1.0);
+            }
+        `;
 
-      float hash(vec3 p){
-        p = fract(p * 0.3183099 + vec3(0.1,0.2,0.3));
-        p *= 17.0;
-        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-      }
-      float vnoise(vec3 p){
-        vec3 i = floor(p);
-        vec3 f = fract(p);
-        f = f*f*(3.0-2.0*f);
-        float n000 = hash(i + vec3(0,0,0));
-        float n100 = hash(i + vec3(1,0,0));
-        float n010 = hash(i + vec3(0,1,0));
-        float n110 = hash(i + vec3(1,1,0));
-        float n001 = hash(i + vec3(0,0,1));
-        float n101 = hash(i + vec3(1,0,1));
-        float n011 = hash(i + vec3(0,1,1));
-        float n111 = hash(i + vec3(1,1,1));
-        float nx00 = mix(n000, n100, f.x);
-        float nx10 = mix(n010, n110, f.x);
-        float nx01 = mix(n001, n101, f.x);
-        float nx11 = mix(n011, n111, f.x);
-        float nxy0 = mix(nx00, nx10, f.y);
-        float nxy1 = mix(nx01, nx11, f.y);
-        return mix(nxy0, nxy1, f.z);
-      }
+        const posShader = `
+            uniform sampler2D textureVelocity;
+            void main() {
+                vec2 uv = gl_FragCoord.xy / resolution.xy;
+                vec3 pos = texture2D(texturePosition, uv).xyz;
+                vec3 vel = texture2D(textureVelocity, uv).xyz;
+                pos += vel;
+                gl_FragColor = vec4(pos, 1.0);
+            }
+        `;
 
-      vec3 field(vec3 p, float t){
-        float s = uNoiseScale;
-        vec3 q = p*s + vec3(t*uNoiseSpeed);
-        float n1 = vnoise(q);
-        float n2 = vnoise(q + vec3(19.1,7.2,13.7));
-        float n3 = vnoise(q + vec3(3.4,11.7,5.9));
-        return vec3(n1, n2, n3)*2.0 - 1.0;
-      }
+        velVar = gpuCompute.addVariable("textureVelocity", velShader, dtVel);
+        posVar = gpuCompute.addVariable("texturePosition", posShader, dtPos);
 
-      vec3 curl(vec3 p, float t){
-        float e = 0.35;
-        vec3 dx = vec3(e,0,0);
-        vec3 dy = vec3(0,e,0);
-        vec3 dz = vec3(0,0,e);
+        gpuCompute.setVariableDependencies(velVar, [velVar, posVar]);
+        gpuCompute.setVariableDependencies(posVar, [velVar]); // Dépend de la vélocité
 
-        vec3 f1 = field(p + dy, t);
-        vec3 f2 = field(p - dy, t);
-        vec3 f3 = field(p + dz, t);
-        vec3 f4 = field(p - dz, t);
-        vec3 f5 = field(p + dx, t);
-        vec3 f6 = field(p - dx, t);
+        // Uniforms custom
+        velVar.material.uniforms.uTime = { value: 0 };
+        velVar.material.uniforms.textureTarget = { value: dtTarget };
 
-        float x = (f1.z - f2.z) - (f3.y - f4.y);
-        float y = (f3.x - f4.x) - (f5.z - f6.z);
-        float z = (f5.y - f6.y) - (f1.x - f2.x);
+        // C'est vital de stocker la référence à la texture target pour la mettre à jour
+        window.targetUniform = velVar.material.uniforms.textureTarget;
+        window.targetTexture = dtTarget;
 
-        return normalize(vec3(x,y,z) + 1e-5);
-      }
-
-      void main(){
-        vec2 uv = gl_FragCoord.xy / resolution.xy;
-
-        vec3 pos = texture2D(texturePosition, uv).xyz;
-        vec3 vel = texture2D(textureVelocity, uv).xyz;
-        vec3 tgt = texture2D(textureTarget, uv).xyz;
-
-        vec3 c = curl(pos, uTime);
-        vel += c * uCurlStrength * uDelta;
-
-        vec3 toT = (tgt - pos);
-        vel += toT * uAttractStrength * uTargetBlend * uDelta;
-
-        vel *= uDamping;
-
-        float b = uBounds;
-        if (pos.x >  b) pos.x = -b;
-        if (pos.x < -b) pos.x =  b;
-        if (pos.y >  b) pos.y = -b;
-        if (pos.y < -b) pos.y =  b;
-        if (pos.z >  b) pos.z = -b;
-        if (pos.z < -b) pos.z =  b;
-
-        gl_FragColor = vec4(vel, 1.0);
-      }
-    `;
-
-    const positionShader = /* glsl */`
-      uniform float uDelta;
-      uniform sampler2D texturePosition;
-      uniform sampler2D textureVelocity;
-      void main(){
-        vec2 uv = gl_FragCoord.xy / resolution.xy;
-        vec3 pos = texture2D(texturePosition, uv).xyz;
-        vec3 vel = texture2D(textureVelocity, uv).xyz;
-        pos += vel * uDelta;
-        gl_FragColor = vec4(pos, 1.0);
-      }
-    `;
-
-    const velVar = gpuCompute.addVariable("textureVelocity", velocityShader, dtVelocity);
-    const posVar = gpuCompute.addVariable("texturePosition", positionShader, dtPosition);
-
-    gpuCompute.setVariableDependencies(velVar, [velVar, posVar]);
-    gpuCompute.setVariableDependencies(posVar, [velVar, posVar]);
-
-    velVar.material.uniforms.uTime = { value: 0 };
-    velVar.material.uniforms.uDelta = { value: 0.016 };
-    velVar.material.uniforms.uDamping = { value: SETTINGS.DAMPING };
-    velVar.material.uniforms.uBounds = { value: SETTINGS.BOUNDS };
-    velVar.material.uniforms.uNoiseScale = { value: SETTINGS.NOISE_SCALE };
-    velVar.material.uniforms.uNoiseSpeed = { value: SETTINGS.NOISE_SPEED };
-    velVar.material.uniforms.uCurlStrength = { value: SETTINGS.CURL_STRENGTH };
-    velVar.material.uniforms.uAttractStrength = { value: SETTINGS.ATTRACT_STRENGTH };
-    velVar.material.uniforms.uTargetBlend = { value: SETTINGS.TARGET_BLEND };
-    velVar.material.uniforms.textureTarget = { value: dtTarget };
-
-    posVar.material.uniforms.uDelta = { value: 0.016 };
-
-    const err = gpuCompute.init();
-    if (err) {
-      warnBox.innerHTML = "<b>Compute init error :</b> " + err + "<br/>Essaie SIZE=128 ou désactive Bloom.";
-      console.error(err);
+        const error = gpuCompute.init();
+        if (error !== null) console.error(error);
     }
 
-    function createSupernovaTexture(){
-      const c = document.createElement("canvas");
-      c.width = 256; c.height = 256;
-      const ctx = c.getContext("2d");
-      const g = ctx.createRadialGradient(128,128,0, 128,128,128);
-      g.addColorStop(0.00, "rgba(255,255,255,1)");
-      g.addColorStop(0.12, "rgba(255,255,255,.95)");
-      g.addColorStop(0.28, "rgba(255,255,255,.55)");
-      g.addColorStop(0.55, "rgba(255,255,255,.18)");
-      g.addColorStop(1.00, "rgba(0,0,0,0)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0,0,256,256);
-      ctx.globalCompositeOperation = "lighter";
-      for(let i=0;i<7;i++){
-        ctx.beginPath();
-        ctx.arc(128,128, 18 + i*18, 0, Math.PI*2);
-        ctx.strokeStyle = `rgba(255,255,255,${0.06 - i*0.007})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-      return new THREE.CanvasTexture(c);
-    }
+    function fillTextures(pos, vel, target) {
+        const pArr = pos.image.data;
+        const vArr = vel.image.data;
+        const tArr = target.image.data;
 
-    // Geometry UVs (✅ clean, no stray syntax)
-    const geom = new THREE.BufferGeometry();
-    const dummyPos = new Float32Array(PARTICLES * 3);
-    const uvs = new Float32Array(PARTICLES * 2);
-    let id = 0;
-    for(let y=0;y<SIZE;y++){
-      for(let x=0;x<SIZE;x++){
-        dummyPos[id*3+0]=0; dummyPos[id*3+1]=0; dummyPos[id*3+2]=0;
-        uvs[id*2+0]= x/(SIZE-1);
-        uvs[id*2+1]= y/(SIZE-1);
-        id++;
-      }
-    }
-    geom.setAttribute("position", new THREE.BufferAttribute(dummyPos,3));
-    geom.setAttribute("uv", new THREE.BufferAttribute(uvs,2));
-
-    const particleMat = new THREE.ShaderMaterial({
-      uniforms:{
-        uTime:{ value:0 },
-        uPositions:{ value:null },
-        uColor:{ value: story[0].color.clone() },
-        uTexture:{ value: createSupernovaTexture() },
-        uPointSize:{ value: SETTINGS.POINT_SIZE },
-        uRatio:{ value: renderer.getPixelRatio() },
-        uPulse:{ value: 0.0 }
-      },
-      vertexShader: `
-        uniform sampler2D uPositions;
-        uniform float uTime;
-        uniform float uPointSize;
-        uniform float uRatio;
-        uniform float uPulse;
-        varying float vAlpha;
-        varying float vTwinkle;
-
-        void main(){
-          vec3 pos = texture2D(uPositions, uv).xyz;
-
-          float rnd = fract(sin(dot(uv, vec2(12.9898,78.233))) * 43758.5453);
-          float tw = 0.6 + 0.4 * sin(uTime * (2.6 + rnd*3.0) + rnd*100.0);
-          vTwinkle = tw;
-
-          vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-          gl_Position = projectionMatrix * mv;
-
-          float base = uPointSize * (0.65 + rnd);
-          float accent = 1.0 + uPulse*(0.40 + rnd*0.35);
-          gl_PointSize = (base * uRatio * accent) / -mv.z;
-
-          vAlpha = smoothstep(650.0, 220.0, -mv.z);
+        for (let k = 0; k < pArr.length; k += 4) {
+            // Random start
+            const x = (Math.random()-0.5)*100;
+            const y = (Math.random()-0.5)*100;
+            const z = (Math.random()-0.5)*100;
+            
+            pArr[k] = x; pArr[k+1] = y; pArr[k+2] = z; pArr[k+3] = 1;
+            tArr[k] = x; tArr[k+1] = y; tArr[k+2] = z; tArr[k+3] = 1;
+            vArr[k] = 0; vArr[k+1] = 0; vArr[k+2] = 0; vArr[k+3] = 1;
         }
-      `,
-      fragmentShader: `
-        uniform vec3 uColor;
-        uniform sampler2D uTexture;
-        varying float vAlpha;
-        varying float vTwinkle;
-        void main(){
-          vec4 tex = texture2D(uTexture, gl_PointCoord);
-          if(tex.a < 0.05) discard;
+    }
 
-          float a = tex.a * vAlpha * (0.78 + 0.22*vTwinkle);
-          vec3 col = uColor;
+    // --- VISUALISATION ---
+    let particleMat;
+    function initVisuals() {
+        // Texture brillante générée
+        const canvas = document.createElement('canvas'); canvas.width=64; canvas.height=64;
+        const ctx = canvas.getContext('2d');
+        const g = ctx.createRadialGradient(32,32,0,32,32,32);
+        g.addColorStop(0,'white'); g.addColorStop(0.4,'rgba(255,255,255,0.2)'); g.addColorStop(1,'transparent');
+        ctx.fillStyle=g; ctx.fillRect(0,0,64,64);
+        const tex = new THREE.CanvasTexture(canvas);
 
-          float core = smoothstep(0.9, 0.2, distance(gl_PointCoord, vec2(0.5)));
-          col += vec3(0.12) * core;
-
-          gl_FragColor = vec4(col, a);
+        const geo = new THREE.BufferGeometry();
+        const pos = new Float32Array(PARTICLES * 3);
+        const uv = new Float32Array(PARTICLES * 2);
+        
+        for (let i=0; i<SETTINGS.SIZE; i++) {
+            for (let j=0; j<SETTINGS.SIZE; j++) {
+                const k = (i*SETTINGS.SIZE + j);
+                pos[k*3] = 0; 
+                uv[k*2] = j/(SETTINGS.SIZE-1); 
+                uv[k*2+1] = i/(SETTINGS.SIZE-1);
+            }
         }
-      `,
-      transparent:true,
-      depthWrite:false,
-      blending: THREE.AdditiveBlending
-    });
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 
-    const points = new THREE.Points(geom, particleMat);
-    scene.add(points);
+        particleMat = new THREE.ShaderMaterial({
+            uniforms: {
+                tPos: { value: null },
+                uColor: { value: story[0].color },
+                uTex: { value: tex }
+            },
+            vertexShader: `
+                uniform sampler2D tPos;
+                varying float vAlpha;
+                void main() {
+                    vec3 pos = texture2D(tPos, uv).xyz;
+                    vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+                    gl_Position = projectionMatrix * mv;
+                    gl_PointSize = 200.0 / -mv.z; // GROS POINTS
+                    vAlpha = smoothstep(500.0, 100.0, -mv.z);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 uColor;
+                uniform sampler2D uTex;
+                varying float vAlpha;
+                void main() {
+                    vec4 t = texture2D(uTex, gl_PointCoord);
+                    gl_FragColor = vec4(uColor, t.a * vAlpha);
+                }
+            `,
+            transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+        });
 
-    // Post stack
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
+        const points = new THREE.Points(geo, particleMat);
+        scene.add(points);
+    }
 
-    const bloom = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      SETTINGS.bloomStrength,
-      SETTINGS.bloomRadius,
-      SETTINGS.bloomThreshold
-    );
+    // --- POST-PROCESSING ---
+    const composer = new THREE.EffectComposer(renderer);
+    composer.addPass(new THREE.RenderPass(scene, camera));
+    const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.8, 0.1);
     composer.addPass(bloom);
 
-    const RGBShiftShader = {
-      uniforms: { tDiffuse:{value:null}, amount:{value:SETTINGS.rgbShift}, angle:{value:0.35} },
-      vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
-      fragmentShader: `
-        uniform sampler2D tDiffuse; uniform float amount; uniform float angle; varying vec2 vUv;
-        void main(){
-          vec2 offset = amount * vec2(cos(angle), sin(angle));
-          vec4 cr = texture2D(tDiffuse, vUv + offset);
-          vec4 cga = texture2D(tDiffuse, vUv);
-          vec4 cb = texture2D(tDiffuse, vUv - offset);
-          gl_FragColor = vec4(cr.r, cga.g, cb.b, cga.a);
+    // --- LOGIQUE FORMES ---
+    function updateShape(name) {
+        const data = window.targetTexture.image.data;
+        const N = PARTICLES;
+        
+        for(let i=0; i<N; i++) {
+            const k = i*4;
+            const u = i/N;
+            let x=0, y=0, z=0;
+
+            if(name === "chaos") {
+                const r = 100 * Math.cbrt(Math.random());
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                x = r * Math.sin(phi) * Math.cos(theta);
+                y = r * Math.sin(phi) * Math.sin(theta);
+                z = r * Math.cos(phi);
+            } else if(name === "wave") {
+                x = (u-0.5)*300;
+                z = (Math.random()-0.5)*100;
+                y = Math.sin(x*0.05)*30 + Math.cos(z*0.1)*10;
+            } else if(name === "dna") {
+                const angle = u * Math.PI * 20;
+                const r = 30;
+                x = Math.cos(angle)*r;
+                z = Math.sin(angle)*r;
+                y = (u-0.5)*300;
+                if(i%2===0) {x+=10;} // Séparation
+            } else if(name === "sphere") {
+                const r = 60;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                x = r * Math.sin(phi) * Math.cos(theta);
+                y = r * Math.sin(phi) * Math.sin(theta);
+                z = r * Math.cos(phi);
+            } else { // Galaxy
+                const r = u * 150;
+                const angle = u * 10;
+                x = Math.cos(angle)*r;
+                z = Math.sin(angle)*r;
+                y = (Math.random()-0.5)*10;
+            }
+            data[k]=x; data[k+1]=y; data[k+2]=z;
         }
-      `
-    };
-    const rgbPass = new ShaderPass(RGBShiftShader);
-    composer.addPass(rgbPass);
-
-    const film = new FilmPass(SETTINGS.grainIntensity, 0.025, 648, false);
-    composer.addPass(film);
-
-    function applyPost(){ bloom.enabled = SETTINGS.bloomOn; }
-    applyPost();
-
-    function pulse(){
-      particleMat.uniforms.uPulse.value = 1.0;
-      const t0 = performance.now();
-      const dur = 900;
-      (function tick(){
-        const k = (performance.now() - t0) / dur;
-        particleMat.uniforms.uPulse.value = Math.max(0, 1.0 - k);
-        if(k < 1) requestAnimationFrame(tick);
-      })();
+        window.targetTexture.needsUpdate = true;
     }
 
-    function next(){
-      step = (step + 1) % story.length;
-
-      writeTargetShape(story[step].target);
-      velVar.material.uniforms.textureTarget.value = dtTarget;
-
-      setUI(step);
-
-      const from = particleMat.uniforms.uColor.value.clone();
-      const to = story[step].color.clone();
-      const t0 = performance.now();
-      const dur = 1200;
-      (function lerp(){
-        const k = Math.min(1, (performance.now()-t0)/dur);
-        particleMat.uniforms.uColor.value.copy(from).lerp(to, k);
-        if(k < 1) requestAnimationFrame(lerp);
-      })();
-
-      renderer.toneMappingExposure = SETTINGS.EXPOSURE * 1.12;
-      setTimeout(()=> renderer.toneMappingExposure = SETTINGS.EXPOSURE, 220);
-      pulse();
+    // --- NAVIGATION ---
+    function next() {
+        currentStep = (currentStep + 1) % story.length;
+        const s = story[currentStep];
+        
+        // Update Forme
+        updateShape(s.shape);
+        
+        // Update Texte
+        const chap = document.getElementById('chap');
+        const txt = document.getElementById('txt');
+        chap.style.opacity = 0; txt.style.opacity = 0;
+        
+        setTimeout(() => {
+            chap.innerText = s.chap;
+            txt.innerHTML = s.txt;
+            chap.style.opacity = 1; txt.style.opacity = 1;
+            
+            // Couleur avec GSAP
+            gsap.to(particleMat.uniforms.uColor.value, {
+                r: s.color.r, g: s.color.g, b: s.color.b, duration: 1
+            });
+        }, 500);
     }
 
+    // --- ANIMATION LOOP ---
     const clock = new THREE.Clock();
-    let running = false;
-    let ang = 0;
+    
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
 
-    function animate(){
-      if(!running) return;
-      requestAnimationFrame(animate);
+        // GPGPU Step
+        velVar.material.uniforms.uTime.value = t;
+        gpuCompute.compute();
+        
+        // Update Visuals
+        particleMat.uniforms.tPos.value = gpuCompute.getCurrentRenderTarget(posVar).texture;
 
-      const dt = Math.min(clock.getDelta(), 0.033);
-      const t = clock.getElapsedTime();
+        // Camera Orbit
+        camera.position.x = Math.sin(t*0.1) * 120;
+        camera.position.z = Math.cos(t*0.1) * 120;
+        camera.lookAt(0,0,0);
 
-      velVar.material.uniforms.uTime.value = t;
-      velVar.material.uniforms.uDelta.value = dt;
-      posVar.material.uniforms.uDelta.value = dt;
-
-      gpuCompute.compute();
-
-      particleMat.uniforms.uPositions.value = gpuCompute.getCurrentRenderTarget(posVar).texture;
-      particleMat.uniforms.uTime.value = t;
-      particleMat.uniforms.uRatio.value = renderer.getPixelRatio();
-
-      ang += dt * 0.13;
-      const r = SETTINGS.CAMERA_RADIUS;
-      camera.position.x = Math.sin(ang) * r + pointer.x * 55;
-      camera.position.z = Math.cos(ang) * r + pointer.x * 18;
-      camera.position.y = pointer.y * 42;
-      camera.lookAt(pointer.x * 18, pointer.y * 18, 0);
-
-      points.rotation.y = t * 0.03;
-      points.rotation.x = Math.sin(t * 0.12) * 0.06;
-
-      composer.render();
+        composer.render();
     }
 
-    const overlay = document.getElementById("overlay");
-    function start(){
-      if(running) return;
-      running = true;
-      overlay.style.opacity = "0";
-      setTimeout(()=> overlay.style.display = "none", 900);
-      setUI(0);
-      animate();
-    }
+    // --- LANCEMENT ---
+    const intro = document.getElementById('intro');
+    let started = false;
 
-    // ✅ More robust interactions
-    function onPrimaryAction(){
-      if(!running) start();
-      else next();
-    }
-    window.addEventListener("pointerdown", onPrimaryAction, { passive:true });
-    window.addEventListener("touchstart", (e)=>{ onPrimaryAction(); }, { passive:true });
-
-    window.addEventListener("keydown", (e)=>{
-      if(e.key === " " || e.key === "Enter"){
-        e.preventDefault();
-        onPrimaryAction();
-      }
+    document.addEventListener('click', () => {
+        if(!started) {
+            started = true;
+            loadingState.innerText = "Lancement...";
+            
+            // Init en différé pour éviter freeze UI
+            setTimeout(() => {
+                initGPGPU();
+                initVisuals();
+                updateShape(story[0].shape);
+                animate(); // Start loop
+                
+                // Fade out intro
+                intro.style.opacity = 0;
+                setTimeout(() => {
+                    intro.style.display = 'none';
+                    document.getElementById('ui-layer').style.opacity = 1;
+                    next(); // Chapitre 1
+                }, 1000);
+            }, 100);
+        } else {
+            next();
+        }
     });
 
-    document.getElementById("btnReplay").addEventListener("click", (e)=>{
-      e.stopPropagation();
-      step = 0;
-      writeTargetShape(story[0].target);
-      velVar.material.uniforms.textureTarget.value = dtTarget;
-      particleMat.uniforms.uColor.value.copy(story[0].color);
-      setUI(0);
-      pulse();
+    // Resize
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    document.getElementById("btnBloom").addEventListener("click", (e)=>{
-      e.stopPropagation();
-      SETTINGS.bloomOn = !SETTINGS.bloomOn;
-      applyPost();
-      e.currentTarget.textContent = SETTINGS.bloomOn ? "✨ Bloom" : "✦ Bloom";
-    });
-
-    document.getElementById("btnQuality").addEventListener("click", (e)=>{
-      e.stopPropagation();
-      SETTINGS.useHighQuality = !SETTINGS.useHighQuality;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, SETTINGS.useHighQuality ? SETTINGS.DPR_HIGH : SETTINGS.DPR_LOW));
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
-      bloom.setSize(window.innerWidth, window.innerHeight);
-      particleMat.uniforms.uRatio.value = renderer.getPixelRatio();
-      e.currentTarget.textContent = SETTINGS.useHighQuality ? "⚡ Qualité" : "🪶 Qualité";
-    });
-
-    window.addEventListener("resize", ()=>{
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
-      bloom.setSize(window.innerWidth, window.innerHeight);
-      particleMat.uniforms.uRatio.value = renderer.getPixelRatio();
-    });
-
-    setUI(0);
-    barEl.style.width = ((1)/story.length*100) + "%";
-    countEl.textContent = "01/" + String(story.length).padStart(2,"0");
   </script>
 </body>
 </html>
